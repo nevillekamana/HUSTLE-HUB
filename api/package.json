@@ -1,0 +1,13 @@
+{
+  "name": "hustlehub-plus-api",
+  "version": "1.0.0",
+  "description": "Secure backend API for the HustleHub+ freelance marketplace platform",
+  "main": "server.js",
+  "type": "commonjs",
+  "private": true,
+  "license": "UNLICENSED",
+  "author": "Christiaan ten Velden",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
