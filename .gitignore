@@ -1,0 +1,27 @@
+#dependencies
+node_modules/
+
+#environment secrets, only .env.example is committed
+.env
+.env.local
+.env.*.local
+
+#local operating context and course brief, never part of the graded repository
+claude-context/
+
+#local ssl certificates for the https requirement
+*.pem
+*.key
+*.crt
+
+#logs and runtime output
+*.log
+npm-debug.log*
+yarn-error.log*
+
+#os and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
