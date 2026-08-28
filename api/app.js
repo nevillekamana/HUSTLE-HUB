@@ -30,6 +30,24 @@ const BODY_LIMIT = '10kb';
 app.use(express.json({ limit: BODY_LIMIT }));
 
 //-----------------------------------------------------\\
+//                        ROUTES
+//-----------------------------------------------------\\
+
+//liveness probe, kept free of the auth stack so it answers even when a
+//dependency further down is failing
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'api is running',
+    data: {
+      status: 'ok',
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString()
+    }
+  });
+});
+
+//-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
 
