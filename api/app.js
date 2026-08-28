@@ -19,6 +19,17 @@ app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
 //-----------------------------------------------------\\
+//                    REQUEST PARSING
+//-----------------------------------------------------\\
+
+//a request body larger than this is refused before it is buffered, which
+//stops a single oversized payload from exhausting memory
+const BODY_LIMIT = '10kb';
+
+//the api only accepts json, urlencoded parsing stays off until a route needs it
+app.use(express.json({ limit: BODY_LIMIT }));
+
+//-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
 
