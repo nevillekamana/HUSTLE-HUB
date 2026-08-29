@@ -13,6 +13,7 @@ const {
   isValidRole,
   createUser,
   findUserByEmail,
+  findUserById,
   toPublicUser
 } = require('../models/userModel');
 
@@ -153,10 +154,32 @@ const login = async (req, res) => {
 };
 
 //-----------------------------------------------------\\
+//                        PROFILE
+//-----------------------------------------------------\\
+
+//returns the account behind the token, the identifier is taken from the
+//verified claims and never from the url or the body, so one caller cannot ask
+//for another account by changing what they send
+const profile = async (req, res) => {
+  const user = await findUserById(req.auth.id);
+
+  if (!user) {
+    //the signature was good but the account behind it is gone, which is a
+    //missing resource rather than a rejected credential
+    return sendFailure(res, httpStatus.NOT_FOUND, 'the account no longer exists');
+  }
+
+  return sendSuccess(res, httpStatus.OK, 'profile retrieved', {
+    user: toPublicUser(user)
+  });
+};
+
+//-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
 
 module.exports = {
   register,
-  login
+  login,
+  profile
 };

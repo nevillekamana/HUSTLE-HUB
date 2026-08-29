@@ -3,7 +3,8 @@
 //-----------------------------------------------------\\
 
 const express = require('express');
-const { register, login } = require('../controllers/authController');
+const { register, login, profile } = require('../controllers/authController');
+const requireAuth = require('../middleware/requireAuth');
 
 //-----------------------------------------------------\\
 //                     AUTH ROUTES
@@ -21,8 +22,9 @@ router.post('/register', register);
 //401 with one message whether the address or the password was wrong
 router.post('/login', login);
 
-//the protected profile route is added by a later commit, until then its path
-//falls through to the not found handler
+//the only protected route, the guard runs first and the handler is never
+//reached without a token this api signed
+router.get('/profile', requireAuth, profile);
 
 //-----------------------------------------------------\\
 //                        EXPORTS
