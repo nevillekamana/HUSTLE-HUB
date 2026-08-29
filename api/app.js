@@ -4,6 +4,7 @@
 
 const express = require('express');
 const notFound = require('./middleware/notFound');
+const errorHandler = require('./middleware/errorHandler');
 
 //-----------------------------------------------------\\
 //                   APPLICATION SETUP
@@ -51,6 +52,10 @@ app.get('/api/health', (req, res) => {
 //the last thing mounted, anything reaching it matched no route above
 //every new route must be registered before this line or it becomes a 404
 app.use(notFound);
+
+//mounted last of all, express routes an error here from anywhere above,
+//including a body that failed to parse before any route was reached
+app.use(errorHandler);
 
 //-----------------------------------------------------\\
 //                        EXPORTS
