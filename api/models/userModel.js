@@ -37,6 +37,10 @@ const USER_FIELDS = [
 //never leaves the api, the serialiser strips these before any response
 const SENSITIVE_FIELDS = ['passwordHash'];
 
+//everything a response is allowed to carry, derived from the two lists above
+//rather than written out again so the three can never drift apart
+const PUBLIC_FIELDS = USER_FIELDS.filter((field) => !SENSITIVE_FIELDS.includes(field));
+
 //raised when the address is already registered, the register controller turns
 //this into a conflict response so no storage detail reaches the client
 const EMAIL_TAKEN = 'EMAIL_TAKEN';
@@ -61,6 +65,18 @@ const buildUser = ({ fullName, email, passwordHash, role }) => ({
   role,
   createdAt: new Date().toISOString()
 });
+
+//the only shape a user may take in a response, every handler that returns a
+//user goes through here
+//it copies the allowed fields out rather than deleting the hash from a copy,
+//so a field added to a record later is private until it is named above
+const toPublicUser = (user) => {
+  if (!user) {
+    return null;
+  }
+
+  return Object.fromEntries(PUBLIC_FIELDS.map((field) => [field, user[field]]));
+};
 
 //-----------------------------------------------------\\
 //                     DATA ACCESS
@@ -108,10 +124,12 @@ module.exports = {
   SELF_ASSIGNABLE_ROLES,
   USER_FIELDS,
   SENSITIVE_FIELDS,
+  PUBLIC_FIELDS,
   EMAIL_TAKEN,
   normaliseEmail,
   isValidRole,
   buildUser,
+  toPublicUser,
   findAllUsers,
   findUserByEmail,
   createUser
