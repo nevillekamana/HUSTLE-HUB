@@ -3,6 +3,7 @@
 //-----------------------------------------------------\\
 
 const express = require('express');
+const authRoutes = require('./routes/authRoutes');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -48,6 +49,10 @@ app.get('/api/health', (req, res) => {
     }
   });
 });
+
+//the auth surface, registered above the terminal handlers so its paths are
+//matched before anything falls through to the 404
+app.use('/api/auth', authRoutes);
 
 //the last thing mounted, anything reaching it matched no route above
 //every new route must be registered before this line or it becomes a 404
