@@ -3,7 +3,7 @@
 //-----------------------------------------------------\\
 
 const { randomUUID } = require('crypto');
-const { readCollection } = require('../store/jsonStore');
+const { readCollection, updateCollection } = require('../store/jsonStore');
 
 //-----------------------------------------------------\\
 //                        SCHEMA
@@ -37,6 +37,10 @@ const USER_FIELDS = [
 //never leaves the api, the serialiser strips these before any response
 const SENSITIVE_FIELDS = ['passwordHash'];
 
+//raised when the address is already registered, the register controller turns
+//this into a conflict response so no storage detail reaches the client
+const EMAIL_TAKEN = 'EMAIL_TAKEN';
+
 //-----------------------------------------------------\\
 //                    RECORD HELPERS
 //-----------------------------------------------------\\
@@ -59,7 +63,7 @@ const buildUser = ({ fullName, email, passwordHash, role }) => ({
 });
 
 //-----------------------------------------------------\\
-//                        LOOKUPS
+//                     DATA ACCESS
 //-----------------------------------------------------\\
 
 //returns every stored user, callers treat the result as read only
@@ -73,6 +77,27 @@ const findUserByEmail = async (email) => {
   return users.find((user) => user.email === normalised) || null;
 };
 
+//inserts a new user and hands back the stored record, the caller supplies an
+//already hashed password because the model never sees a plain one
+//the duplicate check runs inside the same lock as the insert, a check made
+//before this call leaves a window where two requests for one address both
+//pass it and both write a record
+const createUser = async ({ fullName, email, passwordHash, role }) => {
+  const user = buildUser({ fullName, email, passwordHash, role });
+
+  await updateCollection(USERS_FILE, (users) => {
+    if (users.some((record) => record.email === user.email)) {
+      const conflict = new Error('email already registered');
+      conflict.code = EMAIL_TAKEN;
+      throw conflict;
+    }
+
+    return users.concat(user);
+  });
+
+  return user;
+};
+
 //-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
@@ -83,9 +108,11 @@ module.exports = {
   SELF_ASSIGNABLE_ROLES,
   USER_FIELDS,
   SENSITIVE_FIELDS,
+  EMAIL_TAKEN,
   normaliseEmail,
   isValidRole,
   buildUser,
   findAllUsers,
-  findUserByEmail
+  findUserByEmail,
+  createUser
 };
