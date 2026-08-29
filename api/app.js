@@ -3,6 +3,7 @@
 //-----------------------------------------------------\\
 
 const express = require('express');
+const notFound = require('./middleware/notFound');
 
 //-----------------------------------------------------\\
 //                   APPLICATION SETUP
@@ -46,6 +47,10 @@ app.get('/api/health', (req, res) => {
     }
   });
 });
+
+//the last thing mounted, anything reaching it matched no route above
+//every new route must be registered before this line or it becomes a 404
+app.use(notFound);
 
 //-----------------------------------------------------\\
 //                        EXPORTS
