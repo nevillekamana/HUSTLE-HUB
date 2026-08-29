@@ -8,7 +8,9 @@ const { hashPassword, verifyPassword } = require('../services/passwordService');
 const { generateToken } = require('../services/tokenService');
 const {
   ROLES,
+  SELF_ASSIGNABLE_ROLES,
   EMAIL_TAKEN,
+  isValidRole,
   createUser,
   findUserByEmail,
   toPublicUser
@@ -30,6 +32,18 @@ const findMissingFields = (body, fields) =>
     (field) => typeof body[field] !== 'string' || body[field].trim() === ''
   );
 
+//an absent role registers a client, anything else is honoured only when it is
+//one a person may choose for themselves
+//admin is a real stored role but is deliberately not in the assignable list,
+//so it cannot be reached through this endpoint whatever the body asks for
+const resolveRole = (requested) => {
+  if (requested === undefined) {
+    return ROLES.CLIENT;
+  }
+
+  return isValidRole(requested) ? requested : null;
+};
+
 //-----------------------------------------------------\\
 //                     REGISTRATION
 //-----------------------------------------------------\\
@@ -49,6 +63,22 @@ const register = async (req, res) => {
     );
   }
 
+  const role = resolveRole(body.role);
+
+  if (role === null) {
+    return sendFailure(
+      res,
+      httpStatus.BAD_REQUEST,
+      'the requested role is not valid',
+      [
+        {
+          field: 'role',
+          message: 'must be one of ' + SELF_ASSIGNABLE_ROLES.join(' or ')
+        }
+      ]
+    );
+  }
+
   //looked up before hashing so an obvious duplicate does not pay for a bcrypt run
   const existing = await findUserByEmail(body.email);
 
@@ -64,9 +94,7 @@ const register = async (req, res) => {
       fullName: body.fullName,
       email: body.email,
       passwordHash,
-      //choosing a role is added by the commit that follows, until then every
-      //registration is a client, and a role sent in the body is ignored
-      role: ROLES.CLIENT
+      role
     });
 
     return sendSuccess(res, httpStatus.CREATED, 'user registered successfully', {
