@@ -3,7 +3,7 @@
 //-----------------------------------------------------\\
 
 const express = require('express');
-const { register } = require('../controllers/authController');
+const { register, login } = require('../controllers/authController');
 
 //-----------------------------------------------------\\
 //                     AUTH ROUTES
@@ -17,8 +17,12 @@ const router = express.Router();
 //address is taken and 400 when a required field is missing
 router.post('/register', register);
 
-//login and the protected profile route are added by the commits that follow,
-//until each is mounted its path falls through to the not found handler
+//verifies a credential pair, answers 200 with the safe user and a token, and
+//401 with one message whether the address or the password was wrong
+router.post('/login', login);
+
+//the protected profile route is added by a later commit, until then its path
+//falls through to the not found handler
 
 //-----------------------------------------------------\\
 //                        EXPORTS

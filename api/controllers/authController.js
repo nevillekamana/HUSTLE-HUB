@@ -4,7 +4,8 @@
 
 const httpStatus = require('../utils/httpStatus');
 const { sendSuccess, sendFailure } = require('../utils/apiResponse');
-const { hashPassword } = require('../services/passwordService');
+const { hashPassword, verifyPassword } = require('../services/passwordService');
+const { generateToken } = require('../services/tokenService');
 const {
   ROLES,
   EMAIL_TAKEN,
@@ -19,12 +20,13 @@ const {
 
 //the minimum the endpoint needs to behave, role 2 owns the real rules for
 //format, length and strength and will front this with validation middleware
-const REQUIRED_FIELDS = ['fullName', 'email', 'password'];
+const REGISTER_FIELDS = ['fullName', 'email', 'password'];
+const LOGIN_FIELDS = ['email', 'password'];
 
 //a field that is absent, blank, or not a string all fail the same way, so a
 //number or an object cannot slip past a truthiness check
-const findMissingFields = (body) =>
-  REQUIRED_FIELDS.filter(
+const findMissingFields = (body, fields) =>
+  fields.filter(
     (field) => typeof body[field] !== 'string' || body[field].trim() === ''
   );
 
@@ -36,7 +38,7 @@ const findMissingFields = (body) =>
 //as stored, so the password hash cannot reach the client
 const register = async (req, res) => {
   const body = req.body || {};
-  const missing = findMissingFields(body);
+  const missing = findMissingFields(body, REGISTER_FIELDS);
 
   if (missing.length > 0) {
     return sendFailure(
@@ -82,9 +84,51 @@ const register = async (req, res) => {
 };
 
 //-----------------------------------------------------\\
+//                         LOGIN
+//-----------------------------------------------------\\
+
+//verifies a credential pair and issues a token, the reply carries the safe
+//user object and nothing that could be replayed except the token itself
+const login = async (req, res) => {
+  const body = req.body || {};
+  const missing = findMissingFields(body, LOGIN_FIELDS);
+
+  if (missing.length > 0) {
+    return sendFailure(
+      res,
+      httpStatus.BAD_REQUEST,
+      'required fields are missing',
+      missing.map((field) => ({ field, message: 'is required' }))
+    );
+  }
+
+  const user = await findUserByEmail(body.email);
+
+  //an unknown address and a wrong password give the same answer, telling them
+  //apart would let anyone work out which addresses hold accounts
+  //note for role 2, the two still take different amounts of time because a
+  //miss never reaches bcrypt, equalising that is a hardening step
+  const matches = user ? await verifyPassword(body.password, user.passwordHash) : false;
+
+  if (!matches) {
+    return sendFailure(res, httpStatus.UNAUTHORIZED, 'invalid email or password');
+  }
+
+  //only an identifier and a role go into the token, a jwt payload is readable
+  //by anyone holding it
+  const token = generateToken({ id: user.id, role: user.role });
+
+  return sendSuccess(res, httpStatus.OK, 'login successful', {
+    user: toPublicUser(user),
+    token
+  });
+};
+
+//-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
 
 module.exports = {
-  register
+  register,
+  login
 };
