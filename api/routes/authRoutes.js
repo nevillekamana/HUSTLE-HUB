@@ -1,24 +1,115 @@
 //-----------------------------------------------------\\
-//                        IMPORTS
+//              HUSTLEHUB PLUS - ROLE 2
+//              SECURITY SPECIALIST
+//
+//              Student Number: ST10257779
+//-----------------------------------------------------\\
+
+
+//-----------------------------------------------------\\
+//                      IMPORTS
 //-----------------------------------------------------\\
 
 const express = require('express');
 
+const {
+  register,
+  login
+} = require('../controllers/authController');
+
+const {
+  authenticateToken
+} = require('../middleware/authMiddleware');
+
+const {
+  authorizeRoles
+} = require('../middleware/roleMiddleware');
+
+
 //-----------------------------------------------------\\
-//                     AUTH ROUTES
+//                    ROUTER SETUP
 //-----------------------------------------------------\\
 
-//its own router so every auth path is declared in one place, the mount point
-//in app.js can then change without any path in here being rewritten
 const router = express.Router();
 
-//the handlers are added by the commits that follow this one, register first,
-//then login, then the protected profile route
-//until each is mounted its path falls through to the not found handler, which
-//answers 404 in the standard envelope rather than failing in some other way
 
 //-----------------------------------------------------\\
-//                        EXPORTS
+//                 AUTHENTICATION ROUTES
+//-----------------------------------------------------\\
+
+/**
+ * POST /api/auth/register
+ *
+ * Registers a new user.
+ */
+router.post('/register', register);
+
+
+/**
+ * POST /api/auth/login
+ *
+ * Authenticates a user and returns a JWT token.
+ */
+router.post('/login', login);
+
+
+//-----------------------------------------------------\\
+//                  PROTECTED PROFILE
+//-----------------------------------------------------\\
+
+/**
+ * GET /api/auth/profile
+ *
+ * Requires a valid JWT Bearer token.
+ */
+router.get(
+  '/profile',
+  authenticateToken,
+  (req, res) => {
+    return res.status(200).json({
+      message: 'Protected profile accessed successfully',
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role
+      }
+    });
+  }
+);
+
+
+//-----------------------------------------------------\\
+//                 ADMIN-ONLY ROUTE
+//-----------------------------------------------------\\
+
+/**
+ * GET /api/auth/admin
+ *
+ * Demonstrates role-based authorization.
+ *
+ * The request must:
+ * 1. Contain a valid JWT token.
+ * 2. Belong to a user with the admin role.
+ */
+router.get(
+  '/admin',
+  authenticateToken,
+  authorizeRoles('admin'),
+  (req, res) => {
+    return res.status(200).json({
+      message: 'Admin-only route accessed successfully',
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role
+      }
+    });
+  }
+);
+
+
+//-----------------------------------------------------\\
+//                       EXPORTS
 //-----------------------------------------------------\\
 
 module.exports = router;
