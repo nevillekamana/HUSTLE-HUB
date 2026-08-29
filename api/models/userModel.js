@@ -3,6 +3,7 @@
 //-----------------------------------------------------\\
 
 const { randomUUID } = require('crypto');
+const { readCollection } = require('../store/jsonStore');
 
 //-----------------------------------------------------\\
 //                        SCHEMA
@@ -37,7 +38,7 @@ const USER_FIELDS = [
 const SENSITIVE_FIELDS = ['passwordHash'];
 
 //-----------------------------------------------------\\
-//                     FIELD HELPERS
+//                    RECORD HELPERS
 //-----------------------------------------------------\\
 
 //stored lowercase and trimmed so that a duplicate check cannot be defeated by
@@ -45,10 +46,6 @@ const SENSITIVE_FIELDS = ['passwordHash'];
 const normaliseEmail = (email) => String(email).trim().toLowerCase();
 
 const isValidRole = (role) => SELF_ASSIGNABLE_ROLES.includes(role);
-
-//-----------------------------------------------------\\
-//                  RECORD CONSTRUCTION
-//-----------------------------------------------------\\
 
 //builds the record in the canonical field order, the caller supplies an
 //already hashed password because the model never sees a plain one
@@ -62,6 +59,21 @@ const buildUser = ({ fullName, email, passwordHash, role }) => ({
 });
 
 //-----------------------------------------------------\\
+//                        LOOKUPS
+//-----------------------------------------------------\\
+
+//returns every stored user, callers treat the result as read only
+const findAllUsers = async () => readCollection(USERS_FILE);
+
+//the lookup the duplicate check and the login flow both run through, the
+//needle is normalised so a differently cased address still finds the account
+const findUserByEmail = async (email) => {
+  const normalised = normaliseEmail(email);
+  const users = await findAllUsers();
+  return users.find((user) => user.email === normalised) || null;
+};
+
+//-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
 
@@ -73,5 +85,7 @@ module.exports = {
   SENSITIVE_FIELDS,
   normaliseEmail,
   isValidRole,
-  buildUser
+  buildUser,
+  findAllUsers,
+  findUserByEmail
 };
