@@ -25,6 +25,10 @@ const {
   authorizeRoles
 } = require('../middleware/roleMiddleware');
 
+const {
+  loginRateLimiter
+} = require('../middleware/rateLimitMiddleware');
+
 
 //-----------------------------------------------------\\
 //                    ROUTER SETUP
@@ -49,8 +53,15 @@ router.post('/register', register);
  * POST /api/auth/login
  *
  * Authenticates a user and returns a JWT token.
+ *
+ * The login endpoint is protected by rate limiting
+ * to reduce brute-force password attacks.
  */
-router.post('/login', login);
+router.post(
+  '/login',
+  loginRateLimiter,
+  login
+);
 
 
 //-----------------------------------------------------\\
