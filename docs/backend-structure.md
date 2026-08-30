@@ -27,7 +27,7 @@ of senders, so the API answers in one shape no matter which endpoint was hit.
 | `models/` | `userModel.js` | Owns the shape of a user and how one is found or made |
 | `store/` | `jsonStore.js` | Reads and writes the JSON files, with a lock |
 | `services/` | `passwordService.js`, `tokenService.js` | Hashing and tokens |
-| `middleware/` | `requireAuth.js`, `notFound.js`, `errorHandler.js` | Runs before or after a handler |
+| `middleware/` | `validationMiddleware.js`, `requireAuth.js`, `roleMiddleware.js`, `rateLimitMiddleware.js`, `notFound.js`, `errorHandler.js` | Runs before or after a handler |
 | `utils/` | `apiResponse.js`, `httpStatus.js` | The response envelope and status codes |
 
 `app.js` builds the application. `server.js` starts it. Keeping those apart means the
@@ -42,9 +42,12 @@ request
   -> express.json({ limit: '10kb' })     body parsed, oversized bodies refused
   -> app.use('/api', routes)             the router index
        -> /health                        liveness probe
-       -> /auth  -> authRoutes           register, login, profile
+       -> /auth  -> authRoutes           register, login, profile, admin
+            -> loginRateLimiter          login only, failed attempts capped
+            -> validation                format and strength rules, 400 on failure
             -> requireAuth               protected routes only
-            -> controller                validates, delegates, responds
+            -> authorizeRoles            role restricted routes only
+            -> controller                delegates and responds
   -> notFound                            nothing matched, 404
   -> errorHandler                        anything that threw, controlled reply
 ```
@@ -59,9 +62,10 @@ registered below either of them would never run.
 | Method | Path | Auth | Success | Failures |
 |---|---|---|---|---|
 | GET | `/api/health` | none | 200 | — |
-| POST | `/api/auth/register` | none | 201 + safe user | 400 missing fields, 400 bad role, 409 duplicate |
-| POST | `/api/auth/login` | none | 200 + safe user + token | 400 missing fields, 401 bad credentials |
+| POST | `/api/auth/register` | none | 201 + safe user | 400 failed validation, 400 bad role, 409 duplicate |
+| POST | `/api/auth/login` | none | 200 + safe user + token | 400 missing fields, 401 bad credentials, 429 too many attempts |
 | GET | `/api/auth/profile` | bearer token | 200 + safe user | 401 no/invalid token, 404 account gone |
+| GET | `/api/auth/admin` | bearer token + admin role | 200 | 401 no/invalid token, 403 wrong role |
 
 ---
 
@@ -80,8 +84,11 @@ Field-level validation detail goes in `errors`:
 ```json
 {
   "success": false,
-  "message": "required fields are missing",
-  "errors": [{ "field": "email", "message": "is required" }]
+  "message": "validation failed",
+  "errors": [
+    { "field": "email", "message": "must be a valid email address" },
+    { "field": "password", "message": "must be between 8 and 128 characters" }
+  ]
 }
 ```
 
@@ -90,6 +97,30 @@ Field-level validation detail goes in `errors`:
 ## Security decisions
 
 These are the choices worth explaining in the README's security section.
+
+**Input is whitelisted, not blacklisted.** Validation middleware runs before every
+registration and describes what a value may contain rather than trying to enumerate
+what it may not, so an unanticipated character is refused by default. The patterns are
+anchored at both ends, because an unanchored pattern matches a fragment and would accept
+junk wrapped around a valid-looking substring, and none of them nests a quantifier inside
+another, which is what makes an expression hang on a crafted input rather than fail on it.
+Names allow letters, spaces, hyphens and apostrophes; passwords must be 8 to 128 characters
+with at least one letter and one digit. Every field is checked before anything is reported,
+so a caller fixing a bad request learns everything wrong with it in one reply.
+
+**The password ceiling is a security control, not a formatting rule.** Hashing is
+deliberately slow, so an unbounded password would be a cheap way to spend the server's
+processor time.
+
+**Login is validated more loosely than registration, on purpose.** It checks only that the
+fields are present. A format rule there would answer a malformed address with a 400 while
+every other failed attempt answers 401, and that difference would tell an attacker which
+addresses are worth guessing at. A strength rule would be worse still: it would lock an
+account out of its own login the moment the rule changed.
+
+**Repeated login failures are throttled.** Five failed attempts from one client in a minute
+are met with a 429. Successful logins are not counted, so brute force is checked without a
+legitimate user being locked out of their own account.
 
 **Passwords are never stored or logged in plain text.** The user model has no
 parameter for a plain password — it accepts `passwordHash` only, so storing one by
