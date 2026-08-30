@@ -20,6 +20,10 @@ const HTTP_STATUS = Object.freeze({
   NOT_FOUND: 404,
   //the email is already registered
   CONFLICT: 409,
+  //the request body went past the parser limit
+  PAYLOAD_TOO_LARGE: 413,
+  //too many attempts from one client in the rate limit window
+  TOO_MANY_REQUESTS: 429,
   //something failed that the caller cannot fix, never explained in detail
   INTERNAL_SERVER_ERROR: 500
 });
