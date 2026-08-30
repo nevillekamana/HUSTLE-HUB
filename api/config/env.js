@@ -57,7 +57,13 @@ const env = {
   port: readNumber(process.env.PORT, 5000),
   jwtSecret: readSecret(process.env.JWT_SECRET),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
-  bcryptRounds: readRounds(process.env.BCRYPT_ROUNDS, 12)
+  bcryptRounds: readRounds(process.env.BCRYPT_ROUNDS, 12),
+
+  //the certificate is never committed, an absent one is not an error, the
+  //server falls back to http and says so rather than refusing to start
+  sslPfxPath:
+    process.env.SSL_PFX_PATH || path.join(__dirname, '..', 'certs', 'localhost.pfx'),
+  sslPfxPassword: process.env.SSL_PFX_PASSWORD || ''
 };
 
 //-----------------------------------------------------\\

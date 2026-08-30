@@ -154,7 +154,7 @@ const login = async (req, res) => {
 };
 
 //-----------------------------------------------------\\
-//                        PROFILE
+//                   PROTECTED ROUTES
 //-----------------------------------------------------\\
 
 //returns the account behind the token, the identifier is taken from the
@@ -174,6 +174,16 @@ const profile = async (req, res) => {
   });
 };
 
+//demonstrates a role restricted endpoint, the guards in the router do the
+//deciding, reaching this handler at all is the proof that they passed
+//no account can register as an admin, so in part 1 this exists to show the
+//refusal path working rather than the success path
+const adminArea = async (req, res) =>
+  sendSuccess(res, httpStatus.OK, 'admin area accessed', {
+    id: req.auth.id,
+    role: req.auth.role
+  });
+
 //-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
@@ -181,5 +191,6 @@ const profile = async (req, res) => {
 module.exports = {
   register,
   login,
-  profile
+  profile,
+  adminArea
 };

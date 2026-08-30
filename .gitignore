@@ -13,6 +13,8 @@ claude-context/
 *.pem
 *.key
 *.crt
+*.pfx
+*.p12
 
 #logs and runtime output
 *.log
@@ -25,3 +27,6 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+.vs/
+api/data/users.json
