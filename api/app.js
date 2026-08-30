@@ -3,7 +3,7 @@
 //-----------------------------------------------------\\
 
 const express = require('express');
-const authRoutes = require('./routes/authRoutes');
+const routes = require('./routes');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -36,23 +36,9 @@ app.use(express.json({ limit: BODY_LIMIT }));
 //                        ROUTES
 //-----------------------------------------------------\\
 
-//liveness probe, kept free of the auth stack so it answers even when a
-//dependency further down is failing
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'api is running',
-    data: {
-      status: 'ok',
-      uptime: Math.floor(process.uptime()),
-      timestamp: new Date().toISOString()
-    }
-  });
-});
-
-//the auth surface, registered above the terminal handlers so its paths are
-//matched before anything falls through to the 404
-app.use('/api/auth', authRoutes);
+//the whole api hangs off one prefix, every path the api serves is declared
+//in the routes folder rather than here
+app.use('/api', routes);
 
 //the last thing mounted, anything reaching it matched no route above
 //every new route must be registered before this line or it becomes a 404
