@@ -3,6 +3,8 @@
 //-----------------------------------------------------\\
 
 const express = require('express');
+const { register, login, profile } = require('../controllers/authController');
+const requireAuth = require('../middleware/requireAuth');
 
 //-----------------------------------------------------\\
 //                     AUTH ROUTES
@@ -12,10 +14,17 @@ const express = require('express');
 //in app.js can then change without any path in here being rewritten
 const router = express.Router();
 
-//the handlers are added by the commits that follow this one, register first,
-//then login, then the protected profile route
-//until each is mounted its path falls through to the not found handler, which
-//answers 404 in the standard envelope rather than failing in some other way
+//creates an account, answers 201 with the safe user object, 409 when the
+//address is taken and 400 when a required field is missing
+router.post('/register', register);
+
+//verifies a credential pair, answers 200 with the safe user and a token, and
+//401 with one message whether the address or the password was wrong
+router.post('/login', login);
+
+//the only protected route, the guard runs first and the handler is never
+//reached without a token this api signed
+router.get('/profile', requireAuth, profile);
 
 //-----------------------------------------------------\\
 //                        EXPORTS

@@ -2,6 +2,7 @@
 //                        IMPORTS
 //-----------------------------------------------------\\
 
+const { randomBytes } = require('crypto');
 const path = require('path');
 const dotenv = require('dotenv');
 
@@ -25,6 +26,26 @@ const readNumber = (value, fallback) => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
+//a work factor below this is not worth having, an environment that asks for
+//less is raised to it rather than trusted
+const MINIMUM_BCRYPT_ROUNDS = 10;
+
+const readRounds = (value, fallback) =>
+  Math.max(readNumber(value, fallback), MINIMUM_BCRYPT_ROUNDS);
+
+//no signing secret is ever committed, so an unset one is generated for this
+//process alone, that lets a fresh clone boot without a .env while making the
+//omission obvious, every token stops verifying the moment the process restarts
+const readSecret = (value) => {
+  if (value) {
+    return value;
+  }
+
+  console.warn('[config] JWT_SECRET is not set, generating one for this process only');
+
+  return randomBytes(32).toString('hex');
+};
+
 //-----------------------------------------------------\\
 //                     CONFIGURATION
 //-----------------------------------------------------\\
@@ -33,7 +54,10 @@ const readNumber = (value, fallback) => {
 //should read process.env directly
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: readNumber(process.env.PORT, 5000)
+  port: readNumber(process.env.PORT, 5000),
+  jwtSecret: readSecret(process.env.JWT_SECRET),
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
+  bcryptRounds: readRounds(process.env.BCRYPT_ROUNDS, 12)
 };
 
 //-----------------------------------------------------\\
