@@ -1,0 +1,10 @@
+$kind: http-request
+name: POST /auth/login - malformed JSON body
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: '{ "email": "a@b.com", "password": '
+order: 5000

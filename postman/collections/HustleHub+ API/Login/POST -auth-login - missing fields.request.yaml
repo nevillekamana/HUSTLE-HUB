@@ -1,0 +1,13 @@
+$kind: http-request
+name: POST /auth/login - missing fields
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "{{testEmail}}"
+    }
+order: 4000

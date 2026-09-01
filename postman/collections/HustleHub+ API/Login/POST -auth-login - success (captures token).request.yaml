@@ -1,0 +1,22 @@
+$kind: http-request
+name: POST /auth/login - success (captures token)
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "{{testEmail}}",
+      "password": "Password123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      if (body && body.data && body.data.token) {
+        pm.collectionVariables.set('token', body.data.token);
+      }
+    language: text/javascript
+order: 1000
