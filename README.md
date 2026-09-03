@@ -60,8 +60,7 @@ a locked JSON file rather than MongoDB, and the client is not yet built —
 both are explicit, scheduled Part 2 work rather than gaps in Part 1.
 
 ```
-<img width="1536" height="1024" alt="MERN DIAGRAM" src="https://github.com/user-attachments/assets/127b856c-b879-41e0-8468-d7aae61c9a90" />
-
+![image](https://github.com/EMWCCN/insy7314-2026-g2-insy7314-2026-hustlehub-plus-part1-st10434131/blob/e530b550b90864441cb5cb7f1d35dfdefb75d8a1/MERN%20DIAGRAM.png)
 ```
 
 **System boundary.** Everything inside the outer box is the API process; the
