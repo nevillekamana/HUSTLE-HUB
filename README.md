@@ -60,39 +60,8 @@ a locked JSON file rather than MongoDB, and the client is not yet built —
 both are explicit, scheduled Part 2 work rather than gaps in Part 1.
 
 ```
-                       HTTPS
- Client (React,   ───────────────►  ┌─────────────────────────────────────────┐
- Part 2)                            │   System boundary: HustleHub+ API        │
-                  ◄───────────────  │        (Node.js / Express)               │
-                                     │                                           │
-                                     │  ┌─────────────────────────────────────┐  │
-                                     │  │ Request pipeline                     │  │
-                                     │  │ express.json (10kb cap)              │  │
-                                     │  │  -> rate limiter (login only)        │  │
-                                     │  │  -> input validation                 │  │
-                                     │  │  -> JWT auth / role guard            │  │
-                                     │  └───────────────┬───────────────────────┘  │
-                                     │                  │                          │
-                                     │  ┌───────────────▼───────────────────────┐  │
-                                     │  │ Domain logic                         │  │
-                                     │  │ authController -> passwordService    │  │
-                                     │  │ (bcrypt) + tokenService (JWT)         │  │
-                                     │  └───────────────┬───────────────────────┘  │
-                                     │                  │                          │
-                                     │  ┌───────────────▼───────────────────────┐  │
-                                     │  │ Persistence                           │  │
-                                     │  │ userModel -> locked JSON store        │  │
-                                     │  │ (api/data/users.json — no plaintext   │  │
-                                     │  │  passwords, ever)                     │  │
-                                     │  └───────────────────────────────────────┘  │
-                                     │                                           │
-                                     │  Any thrown/rejected error, from any      │
-                                     │  layer above, is caught by one central    │
-                                     │  handler that replies from a fixed        │
-                                     │  message table — never from the raw       │
-                                     │  error, so no stack trace, file path or   │
-                                     │  config value ever leaves the boundary.   │
-                                     └─────────────────────────────────────────┘
+<img width="1536" height="1024" alt="MERN DIAGRAM" src="https://github.com/user-attachments/assets/127b856c-b879-41e0-8468-d7aae61c9a90" />
+
 ```
 
 **System boundary.** Everything inside the outer box is the API process; the
