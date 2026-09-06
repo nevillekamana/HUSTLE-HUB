@@ -36,13 +36,15 @@ const readRounds = (value, fallback) =>
 //no signing secret is ever committed, so an unset one is generated for this
 //process alone, that lets a fresh clone boot without a .env while making the
 //omission obvious, every token stops verifying the moment the process restarts
-const readSecret = (value) => {
+const readSecret = (value, nodeEnv) => {
   if (value) {
     return value;
   }
-
-  console.warn('[config] JWT_SECRET is not set, generating one for this process only');
-
+  if (nodeEnv !== 'development') {
+    console.error(`[config] JWT_SECRET is not set and NODE_ENV is "${nodeEnv}"...`);
+    process.exit(1);
+  }
+  console.warn('[config] JWT_SECRET is not set, generating one for this process only (development mode)');
   return randomBytes(32).toString('hex');
 };
 
