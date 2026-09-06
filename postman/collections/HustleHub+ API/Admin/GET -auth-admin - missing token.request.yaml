@@ -1,0 +1,5 @@
+$kind: http-request
+name: GET /auth/admin - missing token
+url: "{{baseUrl}}/auth/admin"
+method: GET
+order: 2000

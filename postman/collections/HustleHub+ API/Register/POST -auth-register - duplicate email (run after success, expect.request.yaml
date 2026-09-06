@@ -1,0 +1,16 @@
+$kind: http-request
+name: POST /auth/register - duplicate email (run after success, expect 409)
+url: "{{baseUrl}}/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "fullName": "Test User",
+      "email": "{{testEmail}}",
+      "password": "Password123",
+      "role": "client"
+    }
+order: 2000

@@ -1,0 +1,10 @@
+$kind: http-request
+name: POST /auth/register - malformed JSON body
+url: "{{baseUrl}}/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: '{ "fullName": "Test User", "email": '
+order: 7000
