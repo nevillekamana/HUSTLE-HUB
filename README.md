@@ -32,12 +32,11 @@ are built in Parts 2 and 3.
 ## Overview
 
 HustleHub+ is a freelance marketplace: freelancers advertise services
-("gigs"), and clients browse and book them. The platform will eventually
-hold account credentials, booking records, and income and tax data, so Part 1
-treats security as the foundation the rest is built on rather than a layer
-added at the end. What exists right now is a small, self-contained
-authentication API — everything Parts 2 and 3 build on top of, not something
-they'll need to rework.
+("gigs"), and clients browse and book them. Because the platform will go on
+to handle account credentials, booking records, and income and tax data, Part
+1 treats security as a foundation rather than something bolted on afterward —
+the backend built here is a small, self-contained authentication API that
+Parts 2 and 3 extend rather than rework.
 
 ## Intended Users
 
