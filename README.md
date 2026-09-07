@@ -428,7 +428,7 @@ token.
 
 | Role | Responsibility | Member |
 |---|---|---|
-| Role 1 | Backend / API Lead | Morgan - ST10257779 |
-| Role 2 | Security Specialist | Christiaan - ST10434131 |
+| Role 1 | Backend / API Lead | Christiaan - ST10434131 |
+| Role 2 | Security Specialist | Morgan - ST10257779 | 
 | Role 3 | Architecture & Docs | Neville - ST10404539 |
 | Role 4 | Testing & Submission | Ethan - ST10444972 |
