@@ -422,7 +422,7 @@ A recorded walkthrough shows the API starting over HTTPS, a registration, a
 login that returns a token, and an authenticated profile call using that
 token.
 
-- **Video:** TODO — link once recorded and uploaded.
+- **Video:** https://youtu.be/t7T_t2zLuTA
 
 ## Team
 
