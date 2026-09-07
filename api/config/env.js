@@ -40,11 +40,22 @@ const readSecret = (value, nodeEnv) => {
   if (value) {
     return value;
   }
+  //outside development a generated secret is worse than no start at all, every
+  //token would stop verifying on each restart and nobody would be told why
   if (nodeEnv !== 'development') {
-    console.error(`[config] JWT_SECRET is not set and NODE_ENV is "${nodeEnv}"...`);
+    console.error(
+      '[config] JWT_SECRET is not set and NODE_ENV is ' +
+        nodeEnv +
+        ', refusing to start with a generated secret'
+    );
+
     process.exit(1);
   }
-  console.warn('[config] JWT_SECRET is not set, generating one for this process only (development mode)');
+
+  console.warn(
+    '[config] JWT_SECRET is not set, generating one for this process only'
+  );
+
   return randomBytes(32).toString('hex');
 };
 
@@ -52,12 +63,16 @@ const readSecret = (value, nodeEnv) => {
 //                     CONFIGURATION
 //-----------------------------------------------------\\
 
+//resolved once and shared, so the value the secret check reads is the same one
+//the rest of the api sees, an unset NODE_ENV means development here
+const nodeEnv = process.env.NODE_ENV || 'development';
+
 //the single source of truth for environment values, nothing else in the api
 //should read process.env directly
 const env = {
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
   port: readNumber(process.env.PORT, 5000),
-  jwtSecret: readSecret(process.env.JWT_SECRET),
+  jwtSecret: readSecret(process.env.JWT_SECRET, nodeEnv),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
   bcryptRounds: readRounds(process.env.BCRYPT_ROUNDS, 12),
 
