@@ -60,7 +60,7 @@ routes it through a request pipeline before anything touches storage. The
 locked JSON file rather than MongoDB, and there is no client yet — both are
 scheduled Part 2 work, not gaps in what Part 1 was meant to deliver.
 
-![MERN architecture diagram](https://github.com/EMWCCN/insy7314-2026-g2-insy7314-2026-hustlehub-plus-part1-st10434131/blob/e530b550b90864441cb5cb7f1d35dfdefb75d8a1/MERN%20DIAGRAM.png?raw=true)
+![MERN architecture diagram](https://github.com/EMWCCN/insy7314-2026-g2-insy7314-2026-hustlehub-plus-part1-st10434131/blob/288e9414a5cc4b3386875413e84a8f6755affd51/MERN%20DIAGRAM.png)
 
 **System boundary.** Everything inside the outer box is the API process; the
 client and the eventual MongoDB deployment sit outside it. The only way in is
