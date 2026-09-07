@@ -1,0 +1,6 @@
+$kind: collection
+description: Covers all 5 HustleHub+ auth endpoints plus required negative-path scenarios (duplicate email, wrong password, missing fields, malformed JSON). Run against a local instance started with `npm run dev` in /api, over HTTPS with a self-signed cert (disable SSL certificate verification in Postman settings for local testing).
+variables:
+  baseUrl: https://localhost:5000/api
+  token: ""
+  testEmail: ""

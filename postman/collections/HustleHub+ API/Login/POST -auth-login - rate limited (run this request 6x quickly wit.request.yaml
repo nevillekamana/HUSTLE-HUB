@@ -1,0 +1,14 @@
+$kind: http-request
+name: POST /auth/login - rate limited (run this request 6x quickly with wrong password)
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "{{testEmail}}",
+      "password": "WrongPassword999"
+    }
+order: 6000

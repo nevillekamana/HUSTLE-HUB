@@ -1,0 +1,7 @@
+$kind: http-request
+name: GET /auth/profile - malformed token
+url: "{{baseUrl}}/auth/profile"
+method: GET
+headers:
+  Authorization: Bearer not-a-real-token
+order: 3000
