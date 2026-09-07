@@ -370,7 +370,7 @@ JSON.
   (`api/models/userModel.js`, `SELF_ASSIGNABLE_ROLES`) and nothing in this
   API creates an admin account. Only the `401` and `403` cases are covered.
 - **Screenshots:** a response capture for every scenario listed above,
-  organised by endpoint, showing status code and JSON body:
+  organised by endpoint, showing status code and JSON body: (Click on the endpoint category to reveal the screenshot)
 
   <details>
   <summary>Health</summary>
