@@ -91,6 +91,20 @@
   --shadow-hard-sm: 2px 2px 0 #0F2224;
 }
 
+/* the ghost tile shimmer, a light band sweeping across a loading placeholder */
+@theme {
+  --animate-shimmer: shimmer 1.3s linear infinite;
+
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+}
+
 /*-----------------------------------------------------*\
                       BASE ELEMENTS
 \*-----------------------------------------------------*/
