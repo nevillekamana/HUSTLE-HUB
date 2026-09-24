@@ -2,6 +2,8 @@
 //                        IMPORTS
 //-----------------------------------------------------\\
 
+import { fileURLToPath, URL } from 'node:url';
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
@@ -10,7 +12,16 @@ import { defineConfig } from 'vite';
 //-----------------------------------------------------\\
 
 export default defineConfig({
-  plugins: [react()],
+  //tailwind compiles to a plain stylesheet at build time, so nothing injects a
+  //style tag at runtime that the strict content security policy would block
+  plugins: [react(), tailwindcss()],
+
+  //@ points at src so imports read the same from any depth
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
 
   //the client only ever calls relative /api paths, in development the proxy
   //forwards them to the express api so the browser never meets the self signed
