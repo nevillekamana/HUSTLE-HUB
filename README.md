@@ -60,7 +60,7 @@ routes it through a request pipeline before anything touches storage. The
 locked JSON file rather than MongoDB, and there is no client yet — both are
 scheduled Part 2 work, not gaps in what Part 1 was meant to deliver.
 
-![MERN architecture diagram](https://github.com/EMWCCN/insy7314-2026-g2-insy7314-2026-hustlehub-plus-part1-st10434131/blob/e530b550b90864441cb5cb7f1d35dfdefb75d8a1/MERN%20DIAGRAM.png?raw=true)
+![MERN architecture diagram](https://github.com/EMWCCN/insy7314-2026-g2-insy7314-2026-hustlehub-plus-part1-st10434131/blob/288e9414a5cc4b3386875413e84a8f6755affd51/MERN%20DIAGRAM.png)
 
 **System boundary.** Everything inside the outer box is the API process; the
 client and the eventual MongoDB deployment sit outside it. The only way in is
@@ -370,7 +370,7 @@ JSON.
   (`api/models/userModel.js`, `SELF_ASSIGNABLE_ROLES`) and nothing in this
   API creates an admin account. Only the `401` and `403` cases are covered.
 - **Screenshots:** a response capture for every scenario listed above,
-  organised by endpoint, showing status code and JSON body:
+  organised by endpoint, showing status code and JSON body: (Click on the endpoint category to reveal the screenshot)
 
   <details>
   <summary>Health</summary>
@@ -422,13 +422,13 @@ A recorded walkthrough shows the API starting over HTTPS, a registration, a
 login that returns a token, and an authenticated profile call using that
 token.
 
-- **Video:** TODO — link once recorded and uploaded.
+- **Video:** https://youtu.be/t7T_t2zLuTA
 
 ## Team
 
 | Role | Responsibility | Member |
 |---|---|---|
-| Role 1 | Backend / API Lead | Morgan - ST10257779 |
-| Role 2 | Security Specialist | Christiaan - ST10434131 |
+| Role 1 | Backend / API Lead | Christiaan - ST10434131 |
+| Role 2 | Security Specialist | Morgan - ST10257779 | 
 | Role 3 | Architecture & Docs | Neville - ST10404539 |
 | Role 4 | Testing & Submission | Ethan - ST10444972 |
