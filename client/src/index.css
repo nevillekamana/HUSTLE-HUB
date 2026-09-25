@@ -146,6 +146,57 @@
 }
 
 /*-----------------------------------------------------*\
+                   CATEGORY CLOTHS
+\*-----------------------------------------------------*/
+
+/* each category is a washed shweshwe cloth, the colours live here once and
+   everything else reads them through data-category, the svg prints included,
+   so nothing needs an inline style that the policy would have to allow
+   cloth is the label colour, wash the light ground, ring the print line and
+   the pill border, hover the pressed chip, every label clears 4.5:1 */
+[data-category='design'] {
+  --cat-cloth: #8A2F5E;
+  --cat-wash: #F0E4EA;
+  --cat-ring: #C597AF;
+  --cat-hover: #E5D1DC;
+}
+
+[data-category='writing'] {
+  --cat-cloth: #313C8C;
+  --cat-wash: #E4E6F0;
+  --cat-ring: #989EC6;
+  --cat-hover: #D2D4E6;
+}
+
+[data-category='development'] {
+  --cat-cloth: #155E75;
+  --cat-wash: #E1EAED;
+  --cat-ring: #8AAFBA;
+  --cat-hover: #CCDCE1;
+}
+
+[data-category='marketing'] {
+  --cat-cloth: #8C3A1E;
+  --cat-wash: #F0E5E2;
+  --cat-ring: #C69D8F;
+  --cat-hover: #E6D4CE;
+}
+
+[data-category='tutoring'] {
+  --cat-cloth: #2F5E2A;
+  --cat-wash: #E4EAE3;
+  --cat-ring: #97AF95;
+  --cat-hover: #D1DCD0;
+}
+
+[data-category='other'] {
+  --cat-cloth: #3A3F44;
+  --cat-wash: #E5E6E7;
+  --cat-ring: #9D9FA2;
+  --cat-hover: #D4D5D6;
+}
+
+/*-----------------------------------------------------*\
                     BRAND COMPONENTS
 \*-----------------------------------------------------*/
 

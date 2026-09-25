@@ -18,6 +18,10 @@ const badgeVariants = cva(
         price:
           "h-auto bg-aqua px-3.5 py-1.5 font-heading text-[17px] font-extrabold text-ink tabular-nums",
         destructive: "bg-danger-tint text-destructive",
+        category:
+          "bg-(--cat-wash) text-[11px] tracking-[0.06em] text-(--cat-cloth) uppercase",
+        "category-solid":
+          "h-7 bg-(--cat-cloth) px-3 text-[11px] tracking-[0.08em] text-white uppercase",
         outline:
           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost:
