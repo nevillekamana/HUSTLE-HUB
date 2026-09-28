@@ -139,6 +139,12 @@
     outline-offset: 2px;
   }
 
+  /* headings and the main area only take focus from script, after a page
+     change or the skip link, so they are announced but never ringed */
+  [tabindex='-1']:focus {
+    outline: none;
+  }
+
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;

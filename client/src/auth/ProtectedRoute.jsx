@@ -15,18 +15,19 @@ const HOME = '/gigs';
 
 //these guards only shape what the interface offers, the api checks the token
 //and the role on every request and is the real enforcement
-//signed out goes to sign in and comes back afterwards, a signed in person
-//without the right role goes home with a message instead of a blank page
+//signed out goes to sign in and comes back afterwards, unless the person
+//chose to sign out, a signed in person without the right role goes home
+//with a message instead of a blank page
 const ProtectedRoute = ({ roles, children }) => {
-  const { user } = useAuth();
+  const { user, signedOut } = useAuth();
   const location = useLocation();
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+    return <Navigate to="/login" replace state={signedOut ? null : { from: location.pathname + location.search }} />;
   }
 
   if (roles && !roles.includes(user.role)) {
-    return <Navigate to={HOME} replace state={{ notice: MESSAGES.forbidden }} />;
+    return <Navigate to={HOME} replace state={{ notice: MESSAGES.forbidden, tone: 'error' }} />;
   }
 
   return children || <Outlet />;

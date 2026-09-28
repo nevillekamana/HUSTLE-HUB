@@ -17,8 +17,10 @@ import { request } from '@/api/client';
 const MOCK_MODES = ['off', 'part2', 'all'];
 const MOCK_MODE = MOCK_MODES.includes(import.meta.env.VITE_API_MOCKS) ? import.meta.env.VITE_API_MOCKS : 'off';
 
-//loaded on demand, so a build with the flag off never downloads the mock
-const loadMock = () => import('./mock/server.js');
+//loaded on demand, and the flag is compared as a plain literal so a build
+//with it off drops the mock and its demo accounts from the bundle entirely
+const MOCKS_ON = import.meta.env.VITE_API_MOCKS === 'part2' || import.meta.env.VITE_API_MOCKS === 'all';
+const loadMock = MOCKS_ON ? () => import('./mock/server.js') : null;
 
 //part2 marks a route from the part 2 contract that the mock can stand in for
 const call = async (method, path, { body, part2 = false } = {}) => {

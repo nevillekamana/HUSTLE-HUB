@@ -39,13 +39,15 @@ const persist = (session) => {
 //react subscribes to it through useSyncExternalStore
 //the snapshot object is replaced on every change and never mutated, which is
 //how react knows to re-render
-//notice says why the last session ended, shown once on the sign in page
-let snapshot = { session: readStored(), notice: null };
+//notice says why the last session ended, shown on the sign in page
+//signedOut marks a deliberate sign out, the route guard then forgets the page
+//the person was on so whoever signs in next on this browser starts at home
+let snapshot = { session: readStored(), notice: null, signedOut: false };
 const listeners = new Set();
 
-const update = (session, notice) => {
-  snapshot = { session, notice };
-  persist(session);
+const update = (changes) => {
+  snapshot = { ...snapshot, ...changes };
+  persist(snapshot.session);
   listeners.forEach((listener) => listener());
 };
 
@@ -59,18 +61,22 @@ const sessionStore = {
 
   getToken: () => (snapshot.session ? snapshot.session.token : null),
 
-  start: (session) => update(session, null),
+  start: (session) => update({ session, notice: null, signedOut: false }),
 
   //keeps the token and swaps in a fresher copy of the user
   refreshUser: (user) => {
     if (snapshot.session) {
-      update({ token: snapshot.session.token, user }, snapshot.notice);
+      update({ session: { token: snapshot.session.token, user } });
     }
   },
 
-  end: (notice = null) => update(null, notice),
+  //the session was ended for the person, an expired token for example, so
+  //the page they were on is kept for when they sign back in
+  end: (notice = null) => update({ session: null, notice, signedOut: false }),
 
-  clearNotice: () => update(snapshot.session, null)
+  signOut: (notice = null) => update({ session: null, notice, signedOut: true }),
+
+  clearNotice: () => update({ notice: null })
 };
 
 //-----------------------------------------------------\\

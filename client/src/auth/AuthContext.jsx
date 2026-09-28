@@ -21,12 +21,15 @@ configureApiClient({
   onUnauthorized: (message) => sessionStore.end(message)
 });
 
+//confirms a deliberate sign out on the sign in page it lands on
+const SIGNED_OUT = 'You have signed out';
+
 //-----------------------------------------------------\\
 //                     AUTH PROVIDER
 //-----------------------------------------------------\\
 
 const AuthProvider = ({ children }) => {
-  const { session, notice } = useSyncExternalStore(sessionStore.subscribe, sessionStore.getSnapshot);
+  const { session, notice, signedOut } = useSyncExternalStore(sessionStore.subscribe, sessionStore.getSnapshot);
 
   //refreshes the stored user once on load, so a role changed on the server is
   //picked up and a token that expired while the tab slept is caught early
@@ -77,19 +80,20 @@ const AuthProvider = ({ children }) => {
     return data.user;
   }, []);
 
-  const logout = useCallback(() => sessionStore.end(), []);
+  const logout = useCallback(() => sessionStore.signOut(SIGNED_OUT), []);
 
   const value = useMemo(
     () => ({
       user: session ? session.user : null,
       isSignedIn: Boolean(session),
       notice,
+      signedOut,
       clearNotice: sessionStore.clearNotice,
       login,
       register,
       logout
     }),
-    [session, notice, login, register, logout]
+    [session, notice, signedOut, login, register, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
