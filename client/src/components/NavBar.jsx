@@ -54,7 +54,7 @@ const initials = (name) => {
 
 //white outline pills that read on the teal band and fill white on hover
 const LIGHT_BUTTON =
-  'inline-flex min-h-9.5 items-center rounded-full border-2 border-white px-4 font-bold whitespace-nowrap text-white transition-colors hover:bg-white hover:text-primary';
+  'inline-flex min-h-9.5 items-center rounded-full border-2 border-white px-4 font-bold max-sm:px-3 max-sm:text-sm whitespace-nowrap text-white transition-colors hover:bg-white hover:text-primary';
 
 //-----------------------------------------------------\\
 //                        NAV BAR
@@ -62,6 +62,8 @@ const LIGHT_BUTTON =
 
 //the teal band across the top, the logo leads home, the links follow the
 //role, and the right hand side is either the account or the ways in
+//signed out on a phone, the link to the page already open is left out so the
+//band stays one row
 //on a phone the links drop to their own row and scroll sideways, the padding
 //and matching negative margin on that row leave room for the focus ring,
 //which the scrolling box would otherwise clip
@@ -91,7 +93,7 @@ const NavBar = () => {
 
   return (
     <header className="bg-primary text-white [&_:focus-visible]:outline-white">
-      <div className="mx-auto flex min-h-17 max-w-300 flex-wrap items-center gap-x-5 gap-y-2 px-6 py-2.5 max-sm:px-4">
+      <div className="mx-auto flex min-h-17 max-w-300 flex-wrap items-center gap-x-5 gap-y-2 px-6 py-2.5 max-sm:gap-x-3 max-sm:px-4">
         <Link to={user ? HOME : '/login'} className="rounded-lg">
           <Logo onDark />
         </Link>
@@ -140,10 +142,16 @@ const NavBar = () => {
             </>
           ) : (
             <>
-              <Link to="/login" className="rounded-md font-semibold text-white hover:text-aqua">
+              <Link
+                to="/login"
+                className={cn(
+                  'rounded-md font-semibold text-white hover:text-aqua',
+                  pathname === '/login' && 'max-sm:hidden'
+                )}
+              >
                 Sign in
               </Link>
-              <Link to="/register" className={LIGHT_BUTTON}>
+              <Link to="/register" className={cn(LIGHT_BUTTON, pathname === '/register' && 'max-sm:hidden')}>
                 Create account
               </Link>
             </>

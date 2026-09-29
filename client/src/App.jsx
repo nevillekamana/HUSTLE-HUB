@@ -6,8 +6,10 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AuthProvider from '@/auth/AuthContext';
 import { GuestRoute, HOME, ProtectedRoute } from '@/auth/ProtectedRoute';
 import AppShell from '@/components/AppShell';
+import Login from '@/pages/Login';
 import NotFound from '@/pages/NotFound';
 import Placeholder from '@/pages/Placeholder';
+import Register from '@/pages/Register';
 
 //-----------------------------------------------------\\
 //                    ROLES PER ROUTE
@@ -33,11 +35,8 @@ const App = () => (
           <Route index element={<Navigate to={HOME} replace />} />
 
           <Route element={<GuestRoute />}>
-            <Route path="login" element={<Placeholder lead="Welcome" sticker="back" pageTitle="Sign in" />} />
-            <Route
-              path="register"
-              element={<Placeholder lead="Create your" sticker="account" pageTitle="Create account" />}
-            />
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>

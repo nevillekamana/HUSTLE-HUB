@@ -32,6 +32,11 @@ class ApiError extends Error {
   }
 }
 
+//what a page shows for any caught error, an ApiError already holds a safe
+//sentence, anything else is a fault on this side and only ever reads as the
+//generic one, so a stray exception can never put its own text on screen
+const messageFor = (error) => (error instanceof ApiError ? error.message : MESSAGES.generic);
+
 //-----------------------------------------------------\\
 //                   CLIENT SETTINGS
 //-----------------------------------------------------\\
@@ -183,4 +188,4 @@ const request = async (method, path, { body, transport = fetchTransport } = {}) 
 //                        EXPORTS
 //-----------------------------------------------------\\
 
-export { ApiError, MESSAGES, configureApiClient, request, toApiError };
+export { ApiError, MESSAGES, configureApiClient, messageFor, request, toApiError };

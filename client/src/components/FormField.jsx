@@ -1,0 +1,48 @@
+//-----------------------------------------------------\\
+//                        IMPORTS
+//-----------------------------------------------------\\
+
+import { CircleAlert } from 'lucide-react';
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+
+//-----------------------------------------------------\\
+//                      FORM FIELD
+//-----------------------------------------------------\\
+
+//a labelled input with its hint or its error underneath, wired together so a
+//screen reader reads the problem when the input takes focus
+//error is the api style phrase ("is required"), shown after the label so the
+//message always names the field it belongs to
+//the error is not a live region itself, the form moves focus to the first
+//field in trouble instead, which avoids several alerts firing at once
+const FormField = ({ id, label, error, hint, className, ...inputProps }) => {
+  const errorId = id + '-error';
+  const hintId = id + '-hint';
+  const describedBy = error ? errorId : hint ? hintId : undefined;
+
+  return (
+    <Field data-invalid={error ? true : undefined} className={className}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Input id={id} aria-invalid={error ? true : undefined} aria-describedby={describedBy} {...inputProps} />
+      {error ? (
+        <FieldError id={errorId} role={undefined} className="flex items-start gap-1.5">
+          <CircleAlert aria-hidden="true" className="mt-px size-3.5 flex-none" />
+          <span>{label + ' ' + error}</span>
+        </FieldError>
+      ) : (
+        hint && (
+          <FieldDescription id={hintId} className="text-[13px]">
+            {hint}
+          </FieldDescription>
+        )
+      )}
+    </Field>
+  );
+};
+
+//-----------------------------------------------------\\
+//                        EXPORTS
+//-----------------------------------------------------\\
+
+export default FormField;

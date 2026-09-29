@@ -8,9 +8,11 @@
 //                     DEMO ACCOUNTS
 //-----------------------------------------------------\\
 
-//every demo account shares one password that passes the register rules,
+//every demo account shares one password that passes the register rules and
+//is not on a public breach list, chrome blocks the page with a change your
+//password warning after signing in with one that is, such as Password123,
 //the mock stores only a hash of it
-const DEMO_PASSWORD = 'Password123';
+const DEMO_PASSWORD = 'Lagoon-demo-26';
 
 //ids are 24 hex characters like a mongo objectid, so the client's handling of
 //an invalid id is exercised exactly as it will be against the real api
