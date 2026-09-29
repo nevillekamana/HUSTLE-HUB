@@ -2,8 +2,8 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva } from "class-variance-authority";
 import { cn } from "cn"
 
-const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full border-2 border-transparent bg-clip-padding text-sm font-bold whitespace-nowrap transition-[transform,box-shadow,background-color] duration-100 select-none disabled:pointer-events-none disabled:opacity-60 disabled:shadow-none aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+const buttonStyles = cva(
+  "group/button inline-flex shrink-0 items-center justify-center rounded-full border-2 border-transparent bg-clip-padding text-sm font-bold whitespace-nowrap transition-[transform,box-shadow,background-color] duration-100 select-none disabled:pointer-events-none disabled:opacity-60 disabled:shadow-none data-disabled:pointer-events-none data-disabled:opacity-60 data-disabled:shadow-none aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -41,6 +41,10 @@ const buttonVariants = cva(
     },
   }
 )
+
+// merged, so a link styled as a button resolves the base border-transparent
+// against its variant border the same way Button does
+const buttonVariants = (options) => cn(buttonStyles(options))
 
 function Button({
   className,

@@ -6,6 +6,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AuthProvider from '@/auth/AuthContext';
 import { GuestRoute, HOME, ProtectedRoute } from '@/auth/ProtectedRoute';
 import AppShell from '@/components/AppShell';
+import BrowseGigs from '@/pages/BrowseGigs';
+import GigDetail from '@/pages/GigDetail';
 import Login from '@/pages/Login';
 import NotFound from '@/pages/NotFound';
 import Placeholder from '@/pages/Placeholder';
@@ -40,8 +42,8 @@ const App = () => (
           </Route>
 
           <Route element={<ProtectedRoute />}>
-            <Route path="gigs" element={<Placeholder lead="Browse" sticker="gigs" pageTitle="Browse gigs" />} />
-            <Route path="gigs/:id" element={<Placeholder lead="Gig" sticker="detail" pageTitle="Gig detail" />} />
+            <Route path="gigs" element={<BrowseGigs />} />
+            <Route path="gigs/:id" element={<GigDetail />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={FREELANCER} />}>

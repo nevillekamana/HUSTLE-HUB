@@ -7,6 +7,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { HOME } from '@/auth/ProtectedRoute';
 import { useAuth } from '@/auth/useAuth';
 import { Logo } from '@/components/Logo';
+import { Avatar } from '@/components/Person';
 import { cn } from '@/lib/utils';
 
 //-----------------------------------------------------\\
@@ -35,18 +36,6 @@ const NAV_LINKS = {
 };
 
 const ROLE_LABELS = { client: 'Client', freelancer: 'Freelancer', admin: 'Admin' };
-
-//first and last initial, so a long name still fits the round badge
-const initials = (name) => {
-  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) {
-    return '?';
-  }
-
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-  return (parts[0][0] + last).toUpperCase();
-};
 
 //-----------------------------------------------------\\
 //                     SHARED STYLES
@@ -124,12 +113,7 @@ const NavBar = () => {
         <div className="ml-auto flex items-center gap-3">
           {user ? (
             <>
-              <span
-                aria-hidden="true"
-                className="grid size-8 flex-none place-items-center rounded-full bg-aqua text-[11px] font-bold text-ink"
-              >
-                {initials(user.fullName)}
-              </span>
+              <Avatar name={user.fullName} light />
               <span className="flex flex-col leading-tight max-md:hidden">
                 <span className="font-semibold">{user.fullName}</span>
                 <span className="text-[11px] font-bold tracking-[0.08em] text-aqua uppercase">

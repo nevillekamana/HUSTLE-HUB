@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { CircleAlert, CircleCheck, Info } from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import NavBar from '@/components/NavBar';
 import { BrandPrint, PrintDefs } from '@/components/Prints';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -58,6 +59,8 @@ const Flash = () => {
 //after each move to a new page the view goes back to the top and focus moves
 //to the page heading, which is what a screen reader user needs to hear first
 //a page without its heading yet, one still loading, focuses the main area
+//a page that crashes is caught by the boundary, which starts fresh on the
+//next page so one broken screen does not stick
 const AppShell = () => {
   const { pathname } = useLocation();
   const mainRef = useRef(null);
@@ -109,7 +112,9 @@ const AppShell = () => {
         className="mx-auto w-full max-w-300 px-6 pt-8 pb-20 max-sm:px-4 max-sm:pt-6"
       >
         <Flash />
-        <Outlet />
+        <ErrorBoundary key={pathname}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
     </>
   );
