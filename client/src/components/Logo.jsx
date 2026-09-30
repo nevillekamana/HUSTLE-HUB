@@ -50,15 +50,20 @@ const LogoMark = ({ onDark = false, className }) => (
 
 //the mark and the wordmark together, the name stays real text so it is read
 //out by a screen reader and found by search
-const Logo = ({ onDark = false, className }) => (
+//large is the showpiece size for the sign in panel, a step smaller below the
+//lg width where that panel is narrower
+const Logo = ({ onDark = false, large = false, className }) => (
   <span
     className={cn(
-      'inline-flex items-center gap-2.5 font-heading text-[25px] leading-none font-extrabold tracking-tight max-sm:gap-2 max-sm:text-[22px]',
+      'inline-flex items-center font-heading leading-none font-extrabold tracking-tight',
+      large
+        ? 'gap-3.5 text-[40px] max-lg:gap-2.5 max-lg:text-[30px]'
+        : 'gap-2.5 text-[25px] max-sm:gap-2 max-sm:text-[22px]',
       onDark ? 'text-white' : 'text-ink',
       className
     )}
   >
-    <LogoMark onDark={onDark} className="size-11.5 max-sm:size-10" />
+    <LogoMark onDark={onDark} className={large ? 'size-18 max-lg:size-14' : 'size-11.5 max-sm:size-10'} />
     <span>
       HustleHub<span className={onDark ? 'text-aqua' : 'text-primary'}>+</span>
     </span>

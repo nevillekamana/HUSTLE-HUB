@@ -26,15 +26,18 @@ const PROMISES = [
 
 //sign in and create account share this frame, the form card beside a print
 //panel that says what the marketplace is
+//the two sit side by side at the same height, when the panel is the taller
+//one the form is centred in its card rather than leaving a gap underneath
 //the form comes first in the page so keyboard and screen reader users reach
 //it straight away, on a wide screen the panel is moved to the left, on a
 //phone it follows the form and drops the logo and the category list
-//the white panel fills the print with an even frame all round
+//the white panel fills the print with an even frame all round, and everything
+//in it is centred, the ticked list as one block so its ticks still line up
 const AuthLayout = ({ title, pageTitle, lede, children }) => (
   <div className="grid grid-cols-2 items-stretch gap-8 max-md:grid-cols-1 max-md:gap-6">
     <title>{pageTitle + ' · HustleHub+'}</title>
 
-    <Card className="gap-6 px-7 py-7 max-sm:px-5 max-sm:py-6">
+    <Card className="justify-center gap-6 px-7 py-7 max-sm:px-5 max-sm:py-6">
       <div>
         <h1 tabIndex={-1} className="text-4xl leading-[1.08] font-extrabold max-sm:text-[32px]">
           {title}
@@ -50,13 +53,13 @@ const AuthLayout = ({ title, pageTitle, lede, children }) => (
     >
       <BrandPrint size="large" className="absolute inset-0" />
       <div className="relative m-5.5 flex flex-1 flex-col justify-between gap-7 rounded-card border-2 border-primary bg-card p-7 max-sm:m-3.5 max-sm:p-5">
-        <Logo className="max-md:hidden" />
+        <Logo large className="self-center max-md:hidden" />
 
         <div className="flex flex-col gap-4">
-          <h2 className="text-[32px] leading-tight font-extrabold max-sm:text-[28px]">
+          <h2 className="text-center text-[32px] leading-tight font-extrabold max-sm:text-[28px]">
             Local talent, <Sticker>fixed</Sticker> prices.
           </h2>
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex w-fit flex-col gap-2.5 self-center">
             {PROMISES.map((promise) => (
               <li key={promise} className="flex items-start gap-2.5">
                 <Check aria-hidden="true" className="mt-0.5 size-4.5 flex-none text-primary" />
@@ -66,14 +69,14 @@ const AuthLayout = ({ title, pageTitle, lede, children }) => (
           </ul>
         </div>
 
-        <div className="flex flex-col gap-3 max-md:hidden">
-          <h3 className="font-sans text-xs font-bold tracking-[0.1em] text-muted-foreground uppercase">
+        <div className="flex flex-col gap-4 max-md:hidden">
+          <h3 className="text-center font-sans text-xs font-bold tracking-[0.1em] text-muted-foreground uppercase">
             What you can book
           </h3>
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-3.5 gap-y-2.5">
+          <ul className="grid grid-cols-3 gap-x-3 gap-y-4 max-lg:grid-cols-2">
             {GIG_CATEGORIES.map((category) => (
-              <li key={category} className="flex items-center gap-2.5 text-sm font-semibold">
-                <CategoryTile category={category} />
+              <li key={category} className="flex flex-col items-center gap-2 text-center text-sm font-semibold">
+                <CategoryTile category={category} large />
                 {categoryLabel(category)}
               </li>
             ))}

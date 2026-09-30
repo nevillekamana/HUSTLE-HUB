@@ -39,16 +39,18 @@ const CategoryIcon = ({ category, className }) => {
 
 //the 44px list emblem, washed colour and icon only, the print is kept for the
 //larger surfaces where it reads as cloth rather than noise
-const CategoryTile = ({ category, className }) => (
+//large is the 64px version for the sign in panel
+const CategoryTile = ({ category, large = false, className }) => (
   <span
     aria-hidden="true"
     data-category={categoryOrOther(category)}
     className={cn(
-      'grid size-11 flex-none place-items-center rounded-lg border-2 border-(--cat-ring) bg-(--cat-wash) text-(--cat-cloth)',
+      'grid flex-none place-items-center border-2 border-(--cat-ring) bg-(--cat-wash) text-(--cat-cloth)',
+      large ? 'size-16 rounded-xl' : 'size-11 rounded-lg',
       className
     )}
   >
-    <CategoryIcon category={category} className="size-5" />
+    <CategoryIcon category={category} className={large ? 'size-7' : 'size-5'} />
   </span>
 );
 
