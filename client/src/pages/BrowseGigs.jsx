@@ -95,7 +95,7 @@ const BrowseGigs = () => {
   const filters = readFilters(params);
   const queryKey = JSON.stringify(toApiQuery(filters));
   const load = useCallback(() => api.getGigs(JSON.parse(queryKey)), [queryKey]);
-  const { state, data, error, retry } = useRequest(load);
+  const { state, slow, data, error, retry } = useRequest(load);
   const summaryRef = useRef(null);
   const shownPage = useRef(filters.page);
 
@@ -136,8 +136,9 @@ const BrowseGigs = () => {
 
   let body;
 
+  //the ghosts only appear for a real wait, a quick answer shows no loading
   if (state === 'loading' || pastTheEnd) {
-    body = (
+    body = slow && (
       <>
         <p role="status" className="sr-only">
           Loading gigs

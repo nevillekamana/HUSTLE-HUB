@@ -55,7 +55,7 @@ const ListHeader = ({ headingRef, children }) => (
 const MyGigs = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { state, data, error, retry } = useRequest(api.getMyGigs);
+  const { state, slow, data, error, retry } = useRequest(api.getMyGigs);
   const [edits, setEdits] = useState({ source: null, gigs: [] });
   const [form, setForm] = useState(() => editRequest(location.state));
   const [confirmId, setConfirmId] = useState(null);
@@ -234,8 +234,9 @@ const MyGigs = () => {
 
   let body;
 
+  //the ghost rows only appear for a real wait, a quick answer shows no loading
   if (state === 'loading') {
-    body = (
+    body = slow && (
       <Card className="gap-0 py-0">
         <p role="status" className="sr-only">
           Loading your gigs

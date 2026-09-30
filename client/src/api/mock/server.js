@@ -18,8 +18,6 @@ import { DEMO_PASSWORD, buildSeed } from './seed';
 //                   SETTINGS AND LIMITS
 //-----------------------------------------------------\\
 
-//long enough that loading states are visible while building the pages
-const DELAY_MS = 350;
 const STORE_KEY = 'hustlehub.mockdb';
 const ROLES = { client: 'client', freelancer: 'freelancer', admin: 'admin' };
 const SELF_ASSIGNABLE_ROLES = [ROLES.client, ROLES.freelancer];
@@ -52,8 +50,6 @@ const REFERENCE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 const ok = (status, message, data = {}) => ({ status, envelope: { success: true, message, data } });
 const fail = (status, message, errors = []) => ({ status, envelope: { success: false, message, errors } });
 const invalid = (errors) => fail(400, 'validation failed', errors);
-
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 //-----------------------------------------------------\\
 //                   STORE AND IDENTITY
@@ -847,9 +843,10 @@ const ROUTES = [
 
 //plugs into request() in place of fetch and answers with the same
 //{ status, envelope } shape, so the error mapping cannot tell the difference
+//it answers as fast as the browser can, no wait is added, so a page only
+//shows loading when something is genuinely slow
 const mockTransport = async ({ method, path, body, token }) => {
   await loadStore();
-  await wait(DELAY_MS);
 
   const [pathname, search = ''] = path.split('?');
   const auth = readIdentity(token);

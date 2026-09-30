@@ -78,7 +78,7 @@ const GigDetail = () => {
   const { id } = useParams();
   const location = useLocation();
   const load = useCallback(() => api.getGig(id), [id]);
-  const { state, data, error, status, retry } = useRequest(load);
+  const { state, slow, data, error, status, retry } = useRequest(load);
   const [updated, setUpdated] = useState(null);
   const headingRef = useRef(null);
   const back = backTo(location.state);
@@ -96,6 +96,8 @@ const GigDetail = () => {
     }
   }, [state]);
 
+  //the hidden heading is there from the start so focus has somewhere to land,
+  //the ghost and its announcement wait until the answer is genuinely slow
   if (state === 'loading') {
     return (
       <>
@@ -103,11 +105,15 @@ const GigDetail = () => {
         <h1 tabIndex={-1} className="sr-only">
           Loading gig
         </h1>
-        <p role="status" className="sr-only">
-          Loading gig
-        </p>
         <BackLink to={back} />
-        <DetailSkeleton />
+        {slow && (
+          <>
+            <p role="status" className="sr-only">
+              Loading gig
+            </p>
+            <DetailSkeleton />
+          </>
+        )}
       </>
     );
   }
