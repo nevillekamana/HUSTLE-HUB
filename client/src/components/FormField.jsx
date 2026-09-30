@@ -5,6 +5,7 @@
 import { CircleAlert } from 'lucide-react';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 //-----------------------------------------------------\\
 //                      FORM FIELD
@@ -17,17 +18,29 @@ import { Input } from '@/components/ui/input';
 //the error is not a live region itself, the form moves focus to the first
 //field in trouble instead, which avoids several alerts firing at once
 //an icon, when given, sits inside the start of the box as decoration
-const FormField = ({ id, label, error, hint, icon: Icon, className, ...inputProps }) => {
+//as swaps the input for a textarea or a select, which keep the same label
+//and error wiring, and controlClassName styles that control itself
+const FormField = ({
+  id,
+  label,
+  error,
+  hint,
+  icon: Icon,
+  as: Control = Input,
+  controlClassName,
+  className,
+  ...inputProps
+}) => {
   const errorId = id + '-error';
   const hintId = id + '-hint';
   const describedBy = error ? errorId : hint ? hintId : undefined;
 
   const input = (
-    <Input
+    <Control
       id={id}
       aria-invalid={error ? true : undefined}
       aria-describedby={describedBy}
-      className={Icon ? 'pl-10' : undefined}
+      className={cn(Icon && 'pl-10', controlClassName)}
       {...inputProps}
     />
   );

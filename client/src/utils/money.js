@@ -20,8 +20,9 @@ const formatCents = (cents) => {
 //a rand amount typed into a form, as whole cents (plan section 8.6), or null
 //when the text is not a plain number, so the caller decides what an empty or
 //bad value means
+//spaces are dropped first, so 2 500 is read the way prices are shown here
 const toCents = (rands) => {
-  const text = String(rands === undefined || rands === null ? '' : rands).trim();
+  const text = String(rands === undefined || rands === null ? '' : rands).replace(/\s+/g, '');
 
   if (!/^\d+(\.\d{1,2})?$/.test(text)) {
     return null;
@@ -30,8 +31,21 @@ const toCents = (rands) => {
   return Math.round(Number(text) * 100);
 };
 
+//the other way, for filling a form with a stored price, whole rands stay
+//whole and anything else keeps two decimals, so 150000 reads 1500 and 9950
+//reads 99.50
+const toRands = (cents) => {
+  const value = Math.round(Number(cents));
+
+  if (!Number.isFinite(value) || value < 0) {
+    return '';
+  }
+
+  return value % 100 === 0 ? String(value / 100) : (value / 100).toFixed(2);
+};
+
 //-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
 
-export { formatCents, toCents };
+export { formatCents, toCents, toRands };

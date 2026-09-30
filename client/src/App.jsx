@@ -9,6 +9,7 @@ import AppShell from '@/components/AppShell';
 import BrowseGigs from '@/pages/BrowseGigs';
 import GigDetail from '@/pages/GigDetail';
 import Login from '@/pages/Login';
+import MyGigs from '@/pages/MyGigs';
 import NotFound from '@/pages/NotFound';
 import Placeholder from '@/pages/Placeholder';
 import Register from '@/pages/Register';
@@ -47,7 +48,7 @@ const App = () => (
           </Route>
 
           <Route element={<ProtectedRoute roles={FREELANCER} />}>
-            <Route path="my-gigs" element={<Placeholder lead="My" sticker="gigs" pageTitle="My gigs" />} />
+            <Route path="my-gigs" element={<MyGigs />} />
             <Route path="income" element={<Placeholder lead="Your" sticker="income" pageTitle="Income" />} />
           </Route>
 
