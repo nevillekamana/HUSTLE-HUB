@@ -1,0 +1,242 @@
+/*-----------------------------------------------------*\
+                         IMPORTS
+\*-----------------------------------------------------*/
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* self hosted through fontsource, the content security policy only allows
+   fonts from our own origin so no font cdn is ever contacted
+   the opsz build of bricolage keeps its optical sizes, which is what makes
+   the big headings look drawn rather than scaled up */
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+@import "@fontsource-variable/figtree";
+
+/* one committed light look, so dark: classes inside shadcn components only
+   ever apply under a .dark class that the app never sets, rather than
+   following the operating system into a palette nobody designed */
+@custom-variant dark (&:is(.dark *));
+
+/*-----------------------------------------------------*\
+                      THEME TOKENS
+\*-----------------------------------------------------*/
+
+/* shweshwe lagoon, mapped onto the variable names shadcn components read */
+:root {
+  --background: #EEF4F3;
+  --foreground: #0F2224;
+  --card: #FFFFFF;
+  --card-foreground: #0F2224;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F2224;
+  --primary: #0F5257;
+  --primary-foreground: #FFFFFF;
+  --secondary: #DDECEA;
+  --secondary-foreground: #0F5257;
+  --muted: #DDECEA;
+  --muted-foreground: #475E60;
+  --accent: #DDECEA;
+  --accent-foreground: #0F5257;
+  --destructive: #B3261E;
+  --border: #DDECEA;
+  --input: #0F5257;
+  --ring: #0F2224;
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --font-sans: 'Figtree Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-heading: 'Bricolage Grotesque Variable', 'Figtree Variable', 'Segoe UI', system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* brand colours shadcn has no name for */
+  --color-ink: #0F2224;
+  --color-aqua: #A8E6DC;
+  --color-tint: #DDECEA;
+  --color-print: #1D6E73;
+  --color-success: #1D7A4B;
+  --color-success-tint: #E3F2EA;
+  --color-danger-tint: #FBEAE8;
+  --color-off: #4A5358;
+  --color-off-tint: #ECEDEE;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-card: 1rem;
+
+  /* the hard offset shadows are the one decorative move the whole ui shares */
+  --shadow-hard: 4px 4px 0 var(--primary);
+  --shadow-hard-ink: 4px 4px 0 #0F2224;
+  --shadow-hard-sm: 2px 2px 0 #0F2224;
+}
+
+/* the ghost tile shimmer, a light band sweeping across a loading placeholder */
+@theme {
+  --animate-shimmer: shimmer 1.3s linear infinite;
+
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+}
+
+/*-----------------------------------------------------*\
+                      BASE ELEMENTS
+\*-----------------------------------------------------*/
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-heading;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* a visible focus ring on anything a keyboard can reach, components that
+     draw their own ring switch this off with outline-none */
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* headings and the main area only take focus from script, after a page
+     change or the skip link, so they are announced but never ringed */
+  [tabindex='-1']:focus {
+    outline: none;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/*-----------------------------------------------------*\
+                   CATEGORY CLOTHS
+\*-----------------------------------------------------*/
+
+/* each category is a washed shweshwe cloth, the colours live here once and
+   everything else reads them through data-category, the svg prints included,
+   so nothing needs an inline style that the policy would have to allow
+   cloth is the label colour, wash the light ground, ring the print line and
+   the pill border, hover the pressed chip, every label clears 4.5:1 */
+[data-category='design'] {
+  --cat-cloth: #8A2F5E;
+  --cat-wash: #F0E4EA;
+  --cat-ring: #C597AF;
+  --cat-hover: #E5D1DC;
+}
+
+[data-category='writing'] {
+  --cat-cloth: #313C8C;
+  --cat-wash: #E4E6F0;
+  --cat-ring: #989EC6;
+  --cat-hover: #D2D4E6;
+}
+
+[data-category='development'] {
+  --cat-cloth: #155E75;
+  --cat-wash: #E1EAED;
+  --cat-ring: #8AAFBA;
+  --cat-hover: #CCDCE1;
+}
+
+[data-category='marketing'] {
+  --cat-cloth: #8C3A1E;
+  --cat-wash: #F0E5E2;
+  --cat-ring: #C69D8F;
+  --cat-hover: #E6D4CE;
+}
+
+[data-category='tutoring'] {
+  --cat-cloth: #2F5E2A;
+  --cat-wash: #E4EAE3;
+  --cat-ring: #97AF95;
+  --cat-hover: #D1DCD0;
+}
+
+[data-category='other'] {
+  --cat-cloth: #3A3F44;
+  --cat-wash: #E5E6E7;
+  --cat-ring: #9D9FA2;
+  --cat-hover: #D4D5D6;
+}
+
+/*-----------------------------------------------------*\
+                    BRAND COMPONENTS
+\*-----------------------------------------------------*/
+
+@layer components {
+  /* the heading sticker, only the plate tilts so the letters stay level and
+     render crisp at every size, the pseudo element keeps it in plain css */
+  .sticker {
+    position: relative;
+    z-index: 0;
+    display: inline-block;
+    color: var(--primary);
+    padding: 0 0.32em;
+    margin: 0 0.14em 0 0.04em;
+  }
+
+  .sticker::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: #FFFFFF;
+    border: 3px solid var(--primary);
+    border-radius: 16px;
+    box-shadow: 5px 5px 0 var(--primary);
+    transform: rotate(-2deg);
+  }
+}
+
+/* motion is decoration here, never information, so it can all go */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
