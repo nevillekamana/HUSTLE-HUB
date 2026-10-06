@@ -1,65 +1,62 @@
-//-----------------------------------------------------\\
-//                        IMPORTS
-//-----------------------------------------------------\\
+//------------------------------------------------\\
+//              TOKEN AUTHENTICATION
+//------------------------------------------------\\
 
 const httpStatus = require('../utils/httpStatus');
 const { sendFailure } = require('../utils/apiResponse');
 const { verifyToken } = require('../services/tokenService');
+const { ALL_ROLES } = require('../config/accessPolicy');
 
-//-----------------------------------------------------\\
-//                   TOKEN EXTRACTION
-//-----------------------------------------------------\\
-
-//the only scheme the api accepts, compared lowercased because clients differ
-//on how they capitalise it
 const BEARER = 'bearer';
 
-//pulls the credential out of the authorization header, returning null for any
-//header that is absent, malformed, or not a bearer credential
+//the header must be exactly "Bearer <token>"
 const readBearerToken = (header) => {
   if (typeof header !== 'string') {
     return null;
   }
-
   const parts = header.trim().split(' ').filter((part) => part !== '');
-
   if (parts.length !== 2 || parts[0].toLowerCase() !== BEARER) {
     return null;
   }
-
   return parts[1];
 };
 
-//-----------------------------------------------------\\
-//                      AUTH GUARD
-//-----------------------------------------------------\\
+//a token with a valid signature is still refused if it does not name a
+//user and one of the three known roles
+const isValidPayload = (payload) =>
+  payload !== null &&
+  typeof payload === 'object' &&
+  typeof payload.id === 'string' &&
+  payload.id !== '' &&
+  ALL_ROLES.includes(payload.role);
 
-//refuses the request unless it carries a token this api signed and that has
-//not expired, the verified claims are attached for the handler behind it
-//a missing token, a malformed one, an expired one and a forged one all give
-//the same answer, saying which would help someone work out what to try next
+//every failure gives the same answer, so a caller cannot tell a missing
+//token from an expired, forged or malformed one
+const refuse = (res) => {
+  res.setHeader('WWW-Authenticate', 'Bearer');
+  return sendFailure(res, httpStatus.UNAUTHORIZED, 'authentication is required');
+};
+
 const requireAuth = (req, res, next) => {
   const token = readBearerToken(req.headers.authorization);
-
   if (!token) {
-    return sendFailure(res, httpStatus.UNAUTHORIZED, 'authentication is required');
+    return refuse(res);
   }
-
   try {
     const payload = verifyToken(token);
-
-    //only the two claims this api issues are carried forward, a claim role 2
-    //adds later does not become trusted here without being named
+    if (!isValidPayload(payload)) {
+      return refuse(res);
+    }
+    //only the id and the role are kept: nothing else in a token is trusted
     req.auth = { id: payload.id, role: payload.role };
-
     return next();
   } catch (error) {
-    return sendFailure(res, httpStatus.UNAUTHORIZED, 'authentication is required');
+    return refuse(res);
   }
 };
 
-//-----------------------------------------------------\\
-//                        EXPORTS
-//-----------------------------------------------------\\
+//------------------------------------------------\\
+//                    EXPORTS
+//------------------------------------------------\\
 
 module.exports = requireAuth;
