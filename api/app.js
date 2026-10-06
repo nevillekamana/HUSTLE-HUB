@@ -9,6 +9,7 @@ const errorHandler = require('./middleware/errorHandler');
 const securityHeaders = require('./middleware/securityHeaders');
 const { sanitizeRequest } = require('./middleware/sanitizeMiddleware');
 const requireAuthByDefault = require('./middleware/apiGuard');
+const enforceRoutePolicy = require('./middleware/routeGuard');
 const { apiRateLimiter } = require('./middleware/rateLimitMiddleware');
 
 //-----------------------------------------------------\\
@@ -44,6 +45,8 @@ app.use(express.json({ limit: BODY_LIMIT }));
 app.use(sanitizeRequest);
 //every api route needs a valid token unless it is listed as public
 app.use('/api', requireAuthByDefault);
+//each protected address gets its role check and validation from one table
+app.use('/api', enforceRoutePolicy);
 
 //-----------------------------------------------------\\
 //                        ROUTES
