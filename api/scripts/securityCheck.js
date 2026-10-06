@@ -207,6 +207,26 @@ const run = async () => {
   check('good list options reach the route as checked values', list.status === 200 && list.json.paging.skip === 20 && list.json.filters.category === 'design' && list.json.filters.q === 'logo', JSON.stringify(list.json));
 
   console.log('');
+  console.log(' Route policy on the real api addresses');
+  const otherClient9 = tokenFor('client-9', ROLES.CLIENT);
+  const real = async (method, path, token, body) => (await api(method, '/api' + path, { token, body })).status;
+  check('creating a gig is closed to clients (403)', (await real('POST', '/gigs', client, goodGig)) === 403);
+  check('upper case and a trailing slash do not get around it (403)', (await real('POST', '/GIGS/', client, goodGig)) === 403);
+  check('a gig from a freelancer is validated before the route (400)', (await real('POST', '/gigs', freelancer, { title: 'ab' })) === 400);
+  check('changing a gig needs a well formed id (400)', (await real('PUT', '/gigs/not-an-id', freelancer, { isActive: false })) === 400);
+  check('removing a gig is closed to clients (403)', (await real('DELETE', '/gigs/' + GIG_ID, client)) === 403);
+  check('booking is closed to freelancers (403)', (await real('POST', '/bookings', freelancer, { gigId: GIG_ID })) === 403);
+  check('booking is closed to admins (403)', (await real('POST', '/bookings', admin, { gigId: GIG_ID })) === 403);
+  check('a booking from a client is validated before the route (400)', (await real('POST', '/bookings', otherClient9, {})) === 400);
+  check('income is closed to clients (403)', (await real('GET', '/income/me', client)) === 403);
+  check('the full transaction list is for admins only (403)', (await real('GET', '/transactions', freelancer)) === 403);
+  check('the user list is for admins only (403)', (await real('GET', '/admin/users', client)) === 403);
+  check('everything else under /admin is for admins only (403)', (await real('POST', '/admin/anything/else', freelancer, {})) === 403);
+  check('a bad list filter is refused (400)', (await real('GET', '/gigs?limit=1000', client)) === 400);
+  const passed = await real('GET', '/gigs?page=1&limit=5', client);
+  check('a request that passes the policy carries on to the route', ![400, 401, 403, 429].includes(passed), 'status ' + passed);
+
+  console.log('');
   console.log(' Rate limiting');
   const wrongLogin = { email: 'security-check@example.invalid', password: 'wrong-password-1' };
   const loginStatuses = [];
