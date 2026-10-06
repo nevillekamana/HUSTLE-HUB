@@ -14,13 +14,15 @@ const initials = (name) => {
   return (parts[0][0] + last).toUpperCase();
 };
 
-//the api populates a gig's freelancer as { id, fullName }, a bare id or a
-//missing record still reads as something sensible
-const freelancerName = (gig) =>
-  gig && gig.freelancer && typeof gig.freelancer.fullName === 'string' ? gig.freelancer.fullName : 'Freelancer';
+//the api populates people as { id, fullName }, a bare id or a missing record
+//still reads as something sensible
+const personName = (person, fallback = 'Someone') =>
+  person && typeof person.fullName === 'string' && person.fullName.trim() !== '' ? person.fullName : fallback;
+
+const freelancerName = (gig) => personName(gig && gig.freelancer, 'Freelancer');
 
 //-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
 
-export { freelancerName, initials };
+export { freelancerName, initials, personName };

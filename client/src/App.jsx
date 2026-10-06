@@ -9,10 +9,12 @@ import AppShell from '@/components/AppShell';
 import BrowseGigs from '@/pages/BrowseGigs';
 import GigDetail from '@/pages/GigDetail';
 import Login from '@/pages/Login';
+import MyBookings from '@/pages/MyBookings';
 import MyGigs from '@/pages/MyGigs';
 import NotFound from '@/pages/NotFound';
 import Placeholder from '@/pages/Placeholder';
 import Register from '@/pages/Register';
+import Transactions from '@/pages/Transactions';
 
 //-----------------------------------------------------\\
 //                    ROLES PER ROUTE
@@ -53,11 +55,8 @@ const App = () => (
           </Route>
 
           <Route element={<ProtectedRoute roles={CLIENT_OR_FREELANCER} />}>
-            <Route path="bookings" element={<Placeholder lead="My" sticker="bookings" pageTitle="My bookings" />} />
-            <Route
-              path="transactions"
-              element={<Placeholder lead="Your" sticker="transactions" pageTitle="Transactions" />}
-            />
+            <Route path="bookings" element={<MyBookings />} />
+            <Route path="transactions" element={<Transactions />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={ADMIN} />}>

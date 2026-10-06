@@ -3,46 +3,17 @@
 //-----------------------------------------------------\\
 
 import { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { Pause, Pencil, Play, Trash2 } from 'lucide-react';
-import { CategoryTag, CategoryTile } from '@/components/Category';
 import ErrorBanner from '@/components/ErrorBanner';
 import Money from '@/components/Money';
+import { ROW, ROW_ACTIONS, ROW_LIST, ROW_PRICE, UNDER_TITLE } from '@/components/rowLayout';
+import { RowGig } from '@/components/Rows';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/dates';
-
-//-----------------------------------------------------\\
-//                      ROW LAYOUT
-//-----------------------------------------------------\\
-
-//emblem, title, listed and status, price, then the actions, on a narrow
-//screen the price stays beside the title and the rest drops underneath
-//the list holds the columns and each row borrows them as a subgrid, so
-//prices and buttons line up down the list whatever their width
-const LIST =
-  'grid grid-cols-[auto_minmax(0,1.6fr)_minmax(0,1fr)_auto_auto] gap-x-4 max-lg:grid-cols-[auto_minmax(0,1fr)_auto] max-sm:gap-x-3';
-
-const ROW =
-  'col-span-full grid grid-cols-subgrid items-center gap-y-3 border-t-2 border-tint px-4.5 py-3.5 first:border-t-0 max-sm:px-3.5';
-
-const UNDER_TITLE = 'max-lg:col-span-2 max-lg:col-start-2';
-
-//on a phone the buttons take the full width of the row so they stay on one line
-const ACTIONS = 'max-lg:col-span-2 max-lg:col-start-2 max-sm:col-span-full max-sm:col-start-1';
-
-//-----------------------------------------------------\\
-//                     MY GIG LIST
-//-----------------------------------------------------\\
-
-const MyGigList = ({ ref, children }) => (
-  <ul ref={ref} className={LIST}>
-    {children}
-  </ul>
-);
 
 //-----------------------------------------------------\\
 //                      MY GIG ROW
@@ -88,19 +59,7 @@ const MyGigRow = ({ gig, busy, problem, confirming, onEdit, onToggle, onAskDelet
 
   return (
     <li className={ROW}>
-      <CategoryTile category={gig.category} />
-
-      <div className="flex min-w-0 flex-col items-start gap-1">
-        <h3 className="text-[17px] leading-tight font-bold break-words">
-          <Link
-            to={'/gigs/' + encodeURIComponent(gig.id)}
-            className="rounded-sm text-ink hover:text-primary hover:underline"
-          >
-            {gig.title}
-          </Link>
-        </h3>
-        <CategoryTag category={gig.category} />
-      </div>
+      <RowGig id={gig.id} title={gig.title} category={gig.category} />
 
       <div
         className={cn(
@@ -112,9 +71,9 @@ const MyGigRow = ({ gig, busy, problem, confirming, onEdit, onToggle, onAskDelet
         {gig.isActive ? <Badge variant="success">Active</Badge> : <Badge variant="off">Paused</Badge>}
       </div>
 
-      <Money cents={gig.priceCents} className="justify-self-end max-lg:col-start-3 max-lg:row-start-1" />
+      <Money cents={gig.priceCents} className={ROW_PRICE} />
 
-      <div className={cn('flex flex-wrap justify-end gap-2 max-lg:justify-start', ACTIONS)}>
+      <div className={cn('flex flex-wrap justify-end gap-2 max-lg:justify-start', ROW_ACTIONS)}>
         <Button
           type="button"
           variant="outline"
@@ -201,7 +160,7 @@ const MyGigRow = ({ gig, busy, problem, confirming, onEdit, onToggle, onAskDelet
 
 //the shape of the list while it loads, so nothing jumps when rows arrive
 const MyGigRowsSkeleton = ({ count = 4 }) => (
-  <ul aria-hidden="true" className={LIST}>
+  <ul aria-hidden="true" className={ROW_LIST}>
     {Array.from({ length: count }, (_, index) => (
       <li key={index} className={ROW}>
         <Skeleton className="size-11 rounded-lg" />
@@ -213,8 +172,8 @@ const MyGigRowsSkeleton = ({ count = 4 }) => (
           <Skeleton className="h-3.5 w-28" />
           <Skeleton className="h-6 w-16 rounded-full" />
         </div>
-        <Skeleton className="h-8 w-24 justify-self-end rounded-full max-lg:col-start-3 max-lg:row-start-1" />
-        <div className={cn('flex gap-2 max-lg:justify-start', ACTIONS)}>
+        <Skeleton className={cn('h-8 w-24 rounded-full', ROW_PRICE)} />
+        <div className={cn('flex gap-2 max-lg:justify-start', ROW_ACTIONS)}>
           <Skeleton className="h-9 w-18 rounded-full" />
           <Skeleton className="h-9 w-20 rounded-full" />
           <Skeleton className="h-9 w-20 rounded-full" />
@@ -228,4 +187,4 @@ const MyGigRowsSkeleton = ({ count = 4 }) => (
 //                        EXPORTS
 //-----------------------------------------------------\\
 
-export { MyGigList, MyGigRow, MyGigRowsSkeleton };
+export { MyGigRow, MyGigRowsSkeleton };
