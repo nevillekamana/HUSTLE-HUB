@@ -6,6 +6,10 @@ const express = require('express');
 const routes = require('./routes');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
+const securityHeaders = require('./middleware/securityHeaders');
+const { sanitizeRequest } = require('./middleware/sanitizeMiddleware');
+const requireAuthByDefault = require('./middleware/apiGuard');
+const { apiRateLimiter } = require('./middleware/rateLimitMiddleware');
 
 //-----------------------------------------------------\\
 //                   APPLICATION SETUP
@@ -21,6 +25,11 @@ app.set('trust proxy', 1);
 //attacker exactly what stack to target
 app.disable('x-powered-by');
 
+//security headers go on every response, including errors and 404s
+app.use(securityHeaders);
+//a ceiling on requests per address, before any other work is done
+app.use('/api', apiRateLimiter);
+
 //-----------------------------------------------------\\
 //                    REQUEST PARSING
 //-----------------------------------------------------\\
@@ -31,6 +40,10 @@ const BODY_LIMIT = '10kb';
 
 //the api only accepts json, urlencoded parsing stays off until a route needs it
 app.use(express.json({ limit: BODY_LIMIT }));
+//the body and query are checked for injection and cleaned before any route runs
+app.use(sanitizeRequest);
+//every api route needs a valid token unless it is listed as public
+app.use('/api', requireAuthByDefault);
 
 //-----------------------------------------------------\\
 //                        ROUTES
