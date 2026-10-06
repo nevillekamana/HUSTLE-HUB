@@ -24,6 +24,13 @@ const { ROLES } = require('../config/accessPolicy');
 const { protect, authorizeOwner } = require('../middleware/roleMiddleware');
 const { bookingRateLimiter } = require('../middleware/rateLimitMiddleware');
 const { sanitizeRequest, cleanText } = require('../middleware/sanitizeMiddleware');
+const {
+  validateGigCreate,
+  validateGigUpdate,
+  validateBookingCreate,
+  validateIdParam,
+  validateGigQuery
+} = require('../middleware/resourceValidation');
 
 const results = [];
 const check = (name, passed, detail) => {
@@ -56,6 +63,12 @@ standIn.delete(
   done
 );
 standIn.post('/bookings', protect('bookings:create'), bookingRateLimiter, done);
+//the validators on their own, so each rule can be tried without a token
+const listed = (req, res) => res.status(200).json({ success: true, paging: req.paging, filters: req.filters });
+standIn.get('/checked/gigs', validateGigQuery, listed);
+standIn.post('/checked/gigs', validateGigCreate, done);
+standIn.put('/checked/gigs/:id', validateIdParam('id'), validateGigUpdate, done);
+standIn.post('/checked/bookings', validateBookingCreate, done);
 
 //------------------------------------------------\\
 //                   HELPERS
@@ -162,6 +175,36 @@ const run = async () => {
   const echo = await side('POST', '/echo', { body: { title: '<b>Fast</b> logos', password: 'P@ss<w0rd>' } });
   check('text fields are cleaned before a route sees them', echo.json.body && echo.json.body.title === 'Fast logos', JSON.stringify(echo.json.body));
   check('passwords are left exactly as typed', echo.json.body && echo.json.body.password === 'P@ss<w0rd>', JSON.stringify(echo.json.body));
+
+  console.log('');
+  console.log(' Input validation');
+  const GIG_ID = '64b7f0c2a1d3e4f5a6b7c8d9';
+  const goodGig = { title: '  Logo design  ', description: 'A clean logo in three working days', category: 'design', priceCents: 45000 };
+  const fields = (answer) => (answer.json.errors || []).map((error) => error.field).sort().join(', ');
+  const made = await side('POST', '/checked/gigs', { body: goodGig });
+  check('a complete gig is accepted and its text is trimmed', made.status === 200 && made.json.body.title === 'Logo design', JSON.stringify(made.json));
+  const badGig = await side('POST', '/checked/gigs', { body: { title: 'ab', description: 'too short', category: 'cars', priceCents: 50 } });
+  check('a gig with four bad fields gets four messages (400)', badGig.status === 400 && fields(badGig) === 'category, description, priceCents, title', fields(badGig));
+  const textPrice = await side('POST', '/checked/gigs', { body: { ...goodGig, priceCents: '45000' } });
+  check('a price sent as text is refused (400)', textPrice.status === 400 && fields(textPrice) === 'priceCents', fields(textPrice));
+  const bracket = await side('POST', '/checked/gigs', { body: { ...goodGig, title: 'Fast > cheap logos' } });
+  check('a title with a stray > is refused (400)', bracket.status === 400 && fields(bracket) === 'title', fields(bracket));
+  const owner = await side('POST', '/checked/gigs', { body: { ...goodGig, freelancer: GIG_ID } });
+  check('a caller cannot set the owner of a gig (400)', owner.status === 400 && fields(owner) === 'freelancer', fields(owner));
+  check('an update with nothing in it is refused (400)', (await side('PUT', '/checked/gigs/' + GIG_ID, { body: {} })).status === 400);
+  check('an update of one field is accepted', (await side('PUT', '/checked/gigs/' + GIG_ID, { body: { isActive: false } })).status === 200);
+  const badId = await side('PUT', '/checked/gigs/not-an-id', { body: { isActive: false } });
+  check('an address with a malformed id is refused (400)', badId.status === 400 && fields(badId) === 'id', fields(badId));
+  check('a booking without a gig id is refused (400)', (await side('POST', '/checked/bookings', { body: {} })).status === 400);
+  check('a booking with a malformed gig id is refused (400)', (await side('POST', '/checked/bookings', { body: { gigId: '12345' } })).status === 400);
+  check('a booking cannot carry its own price (400)', (await side('POST', '/checked/bookings', { body: { gigId: GIG_ID, priceCents: 1 } })).status === 400);
+  check('a booking for a well formed gig id is accepted', (await side('POST', '/checked/bookings', { body: { gigId: GIG_ID } })).status === 200);
+  const badList = await side('GET', '/checked/gigs?page=0&limit=1000&category=cars&sort=price');
+  check('list options out of range are refused (400)', badList.status === 400 && fields(badList) === 'category, limit, page, sort', fields(badList));
+  check('a filter given twice is refused (400)', (await side('GET', '/checked/gigs?category=design&category=writing')).status === 400);
+  check('a minimum price above the maximum is refused (400)', (await side('GET', '/checked/gigs?minPrice=900&maxPrice=100')).status === 400);
+  const list = await side('GET', '/checked/gigs?page=3&limit=10&category=design&q=logo');
+  check('good list options reach the route as checked values', list.status === 200 && list.json.paging.skip === 20 && list.json.filters.category === 'design' && list.json.filters.q === 'logo', JSON.stringify(list.json));
 
   console.log('');
   console.log(' Rate limiting');
