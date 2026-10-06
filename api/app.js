@@ -1,20 +1,11 @@
 //-----------------------------------------------------\\
-//              HUSTLEHUB PLUS - ROLE 2
-//              SECURITY SPECIALIST
-//
-//              Student Number: ST10257779
-//-----------------------------------------------------\\
-
-
-//-----------------------------------------------------\\
 //                        IMPORTS
 //-----------------------------------------------------\\
 
 const express = require('express');
-const authRoutes = require('./routes/authRoutes');
+const routes = require('./routes');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
-
 
 //-----------------------------------------------------\\
 //                   APPLICATION SETUP
@@ -22,85 +13,45 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-// Trust the first proxy hop so client IP addresses remain
-// accurate when the application is running behind a proxy.
-// This also supports rate limiting when deployed behind HTTPS.
+//trust the first proxy hop so client ips stay accurate behind the https
+//termination that role 2 configures, rate limiting in part 2 depends on this
 app.set('trust proxy', 1);
 
-// Disable the X-Powered-By header so the API does not
-// unnecessarily expose the Express framework to clients.
+//express advertises itself in a response header by default, which tells an
+//attacker exactly what stack to target
 app.disable('x-powered-by');
-
 
 //-----------------------------------------------------\\
 //                    REQUEST PARSING
 //-----------------------------------------------------\\
 
-// Limit JSON request bodies to reduce the risk of
-// oversized payloads consuming excessive server resources.
+//a request body larger than this is refused before it is buffered, which
+//stops a single oversized payload from exhausting memory
 const BODY_LIMIT = '10kb';
 
-app.use(express.json({
-  limit: BODY_LIMIT
-}));
-
+//the api only accepts json, urlencoded parsing stays off until a route needs it
+app.use(express.json({ limit: BODY_LIMIT }));
 
 //-----------------------------------------------------\\
-//                     HEALTH ROUTE
+//                        ROUTES
 //-----------------------------------------------------\\
 
-/**
- * GET /api/health
- *
- * Confirms that the HustleHub Plus API is running.
- */
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'api is running',
-    data: {
-      status: 'ok',
-      uptime: Math.floor(process.uptime()),
-      timestamp: new Date().toISOString()
-    }
-  });
-});
+//the whole api hangs off one prefix, every path the api serves is declared
+//in the routes folder rather than here
+app.use('/api', routes);
 
-
-//-----------------------------------------------------\\
-//                  AUTHENTICATION ROUTES
-//-----------------------------------------------------\\
-
-// Authentication endpoints:
-//
-// POST /api/auth/register
-// POST /api/auth/login
-//
-app.use('/api/auth', authRoutes);
-
-
-//-----------------------------------------------------\\
-//                   NOT FOUND HANDLER
-//-----------------------------------------------------\\
-
-// Requests that do not match any registered route
-// are handled by the standard 404 middleware.
+//the last thing mounted, anything reaching it matched no route above
+//every new route must be registered before this line or it becomes a 404
 app.use(notFound);
 
-
-//-----------------------------------------------------\\
-//                    ERROR HANDLER
-//-----------------------------------------------------\\
-
-// Centralised error handling must remain the final
-// middleware in the request pipeline.
+//mounted last of all, express routes an error here from anywhere above,
+//including a body that failed to parse before any route was reached
 app.use(errorHandler);
-
 
 //-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
 
-// server.js is responsible for starting the HTTP server,
-// which keeps this file easy to import during testing.
+//exported without calling listen so server.js owns the port binding and the
+//app stays importable for role 4 testing
 module.exports = app;

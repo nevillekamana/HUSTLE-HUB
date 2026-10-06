@@ -1,0 +1,14 @@
+$kind: http-request
+name: POST /auth/login - unknown email (same 401 message as wrong password)
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "doesnotexist@example.com",
+      "password": "WhateverPassword123"
+    }
+order: 3000

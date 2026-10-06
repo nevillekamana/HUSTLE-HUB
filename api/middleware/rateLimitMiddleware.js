@@ -1,87 +1,49 @@
 //-----------------------------------------------------\\
-//              HUSTLEHUB PLUS - ROLE 2
-//              SECURITY SPECIALIST
-//
-//              Student Number: ST10257779
+//                    SEAM — ROLE 2 OWNS THIS
 //-----------------------------------------------------\\
-
+//role 1 defines the interface only, role 2 implements the internals
 
 //-----------------------------------------------------\\
-//                      IMPORTS
+//                        IMPORTS
 //-----------------------------------------------------\\
 
-// express-rate-limit is used to restrict repeated requests
-// from the same client within a defined period of time.
 const rateLimit = require('express-rate-limit');
-
+const httpStatus = require('../utils/httpStatus');
+const { sendFailure } = require('../utils/apiResponse');
 
 //-----------------------------------------------------\\
-//                  LOGIN RATE LIMITER
+//                   LOGIN RATE LIMIT
 //-----------------------------------------------------\\
 
-/**
- * Protects the login endpoint against repeated attempts.
- *
- * Security responsibilities:
- * - Reduces brute-force password attacks
- * - Limits automated login attempts
- * - Returns HTTP 429 when too many requests are made
- * - Uses standard rate-limit response headers
- */
+//a password guess is cheap for an attacker and expensive for us, capping the
+//attempts one client may make in a window is what makes guessing impractical
+const LOGIN_WINDOW_MS = 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 5;
+
+//the refusal goes through the shared sender so a throttled caller receives the
+//same envelope as every other failure rather than the library default
 const loginRateLimiter = rateLimit({
+  windowMs: LOGIN_WINDOW_MS,
+  max: LOGIN_MAX_ATTEMPTS,
 
-  //---------------------------------------------------\\
-  //                    TIME WINDOW
-  //---------------------------------------------------\\
+  //only a failed attempt counts, brute force is made of failures and someone
+  //signing in correctly several times should not be locked out for it
+  skipSuccessfulRequests: true,
 
-  // Login attempts are counted over a 1-minute window.
-  windowMs: 60 * 1000,
-
-
-  //---------------------------------------------------\\
-  //                 REQUEST LIMIT
-  //---------------------------------------------------\\
-
-  // A client may attempt login a maximum of 5 times
-  // during the configured 1-minute window.
-  max: 5,
-
-
-  //---------------------------------------------------\\
-  //                    HEADERS
-  //---------------------------------------------------\\
-
-  // Send modern RateLimit headers so clients can see
-  // information about their current request limit.
+  //the standard headers tell an honest client when it may retry
   standardHeaders: true,
-
-  // Disable older X-RateLimit-* headers.
   legacyHeaders: false,
 
-
-  //---------------------------------------------------\\
-  //                LIMIT RESPONSE
-  //---------------------------------------------------\\
-
-  // This response is returned once the login attempt
-  // limit has been exceeded.
-  message: {
-    success: false,
-    message: 'Too many login attempts. Please try again later.'
-  },
-
-
-  //---------------------------------------------------\\
-  //                  STATUS CODE
-  //---------------------------------------------------\\
-
-  // HTTP 429 means Too Many Requests.
-  statusCode: 429
+  handler: (req, res) =>
+    sendFailure(
+      res,
+      httpStatus.TOO_MANY_REQUESTS,
+      'too many login attempts, please try again shortly'
+    )
 });
 
-
 //-----------------------------------------------------\\
-//                       EXPORTS
+//                        EXPORTS
 //-----------------------------------------------------\\
 
 module.exports = {

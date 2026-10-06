@@ -1,0 +1,14 @@
+#dependencies
+node_modules/
+
+#build output, the api serves a fresh build rather than a committed one
+dist/
+dist-ssr/
+
+#local environment overrides, anything prefixed VITE_ ships to the browser
+#so real secrets never belong in the client at all
+*.local
+
+#logs
+*.log
+npm-debug.log*

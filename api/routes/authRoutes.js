@@ -1,126 +1,52 @@
 //-----------------------------------------------------\\
-//              HUSTLEHUB PLUS - ROLE 2
-//              SECURITY SPECIALIST
-//
-//              Student Number: ST10257779
-//-----------------------------------------------------\\
-
-
-//-----------------------------------------------------\\
-//                      IMPORTS
+//                        IMPORTS
 //-----------------------------------------------------\\
 
 const express = require('express');
-
 const {
   register,
-  login
+  login,
+  profile,
+  adminArea
 } = require('../controllers/authController');
-
+const requireAuth = require('../middleware/requireAuth');
+const { authorizeRoles } = require('../middleware/roleMiddleware');
+const { loginRateLimiter } = require('../middleware/rateLimitMiddleware');
 const {
-  authenticateToken
-} = require('../middleware/authMiddleware');
-
-const {
-  authorizeRoles
-} = require('../middleware/roleMiddleware');
-
-const {
-  loginRateLimiter
-} = require('../middleware/rateLimitMiddleware');
-
+  validateRegister,
+  validateLogin
+} = require('../middleware/validationMiddleware');
+const { ROLES } = require('../models/userModel');
 
 //-----------------------------------------------------\\
-//                    ROUTER SETUP
+//                     AUTH ROUTES
 //-----------------------------------------------------\\
 
+//its own router so every auth path is declared in one place, the mount point
+//in app.js can then change without any path in here being rewritten
 const router = express.Router();
 
+//creates an account, answers 201 with the safe user object, 409 when the
+//address is taken and 400 when a field is missing or fails its format rule
+//validation runs first so a malformed body is refused before any lookup or hash
+router.post('/register', validateRegister, register);
+
+//verifies a credential pair, answers 200 with the safe user and a token, and
+//401 with one message whether the address or the password was wrong
+//the limiter sits in front of it because this is the endpoint worth guessing at,
+//and it stays in front of validation so a flood of junk is throttled as well
+router.post('/login', loginRateLimiter, validateLogin, login);
+
+//the guard runs first and the handler is never reached without a token this
+//api signed
+router.get('/profile', requireAuth, profile);
+
+//identity first, then permission, the order matters because an unknown caller
+//is unauthorised while a known one holding the wrong role is forbidden
+router.get('/admin', requireAuth, authorizeRoles(ROLES.ADMIN), adminArea);
 
 //-----------------------------------------------------\\
-//                 AUTHENTICATION ROUTES
-//-----------------------------------------------------\\
-
-/**
- * POST /api/auth/register
- *
- * Registers a new user.
- */
-router.post('/register', register);
-
-
-/**
- * POST /api/auth/login
- *
- * Authenticates a user and returns a JWT token.
- *
- * The login endpoint is protected by rate limiting
- * to reduce brute-force password attacks.
- */
-router.post(
-  '/login',
-  loginRateLimiter,
-  login
-);
-
-
-//-----------------------------------------------------\\
-//                  PROTECTED PROFILE
-//-----------------------------------------------------\\
-
-/**
- * GET /api/auth/profile
- *
- * Requires a valid JWT Bearer token.
- */
-router.get(
-  '/profile',
-  authenticateToken,
-  (req, res) => {
-    return res.status(200).json({
-      message: 'Protected profile accessed successfully',
-      user: {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role
-      }
-    });
-  }
-);
-
-
-//-----------------------------------------------------\\
-//                 ADMIN-ONLY ROUTE
-//-----------------------------------------------------\\
-
-/**
- * GET /api/auth/admin
- *
- * Demonstrates role-based authorization.
- *
- * The request must:
- * 1. Contain a valid JWT token.
- * 2. Belong to a user with the admin role.
- */
-router.get(
-  '/admin',
-  authenticateToken,
-  authorizeRoles('admin'),
-  (req, res) => {
-    return res.status(200).json({
-      message: 'Admin-only route accessed successfully',
-      user: {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role
-      }
-    });
-  }
-);
-
-
-//-----------------------------------------------------\\
-//                       EXPORTS
+//                        EXPORTS
 //-----------------------------------------------------\\
 
 module.exports = router;

@@ -13,6 +13,8 @@ claude-context/
 *.pem
 *.key
 *.crt
+*.pfx
+*.p12
 
 #logs and runtime output
 *.log

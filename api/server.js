@@ -1,77 +1,56 @@
 //-----------------------------------------------------\\
-//              HUSTLEHUB PLUS - ROLE 2
-//              SECURITY SPECIALIST
-//
-//              Student Number: ST10257779
+//                        IMPORTS
 //-----------------------------------------------------\\
 
-
-//-----------------------------------------------------\\
-//                      IMPORTS
-//-----------------------------------------------------\\
-
-const https = require('https');
 const fs = require('fs');
-const path = require('path');
+const http = require('http');
+const https = require('https');
 
 const app = require('./app');
 const env = require('./config/env');
 
-
 //-----------------------------------------------------\\
-//                 SSL CERTIFICATE SETUP
-//-----------------------------------------------------\\
-
-// Path to the local self-signed SSL certificate.
-// The certificate folder is ignored by Git so the
-// private certificate data is never pushed publicly.
-const certificatePath = path.join(
-  __dirname,
-  'certs',
-  'localhost.pfx'
-);
-
-// Read the local PFX certificate from disk.
-const certificate = fs.readFileSync(certificatePath);
-
-
-//-----------------------------------------------------\\
-//                    HTTPS OPTIONS
+//                       TRANSPORT
 //-----------------------------------------------------\\
 
-const httpsOptions = {
+//https is used whenever the certificate bundle can be read and opened, the
+//bundle holds a private key so it is never committed, which means a fresh clone
+//has no file here and would otherwise fail to start
+//reading the file and opening it are attempted together because they fail at
+//different moments, a missing file throws on the read while a wrong passphrase
+//throws later inside the constructor, and only one of those was caught before
+//falling back to http keeps a clone runnable while making the downgrade loud,
+//role 2 supplies the certificate for the https demonstration
+const createSecureServer = () => {
+  try {
+    return https.createServer(
+      { pfx: fs.readFileSync(env.sslPfxPath), passphrase: env.sslPfxPassword },
+      app
+    );
+  } catch (error) {
+    //the short reason is named so the cause is obvious without a stack trace,
+    //a code or a library message rather than the path it was looking in
+    console.warn(
+      '[server] certificate unavailable (' +
+        (error.code || error.message) +
+        '), starting over http instead of https'
+    );
 
-  // Local SSL certificate containing the public
-  // certificate and private key.
-  pfx: certificate,
-
-  // Certificate password is loaded from the .env file
-  // rather than being hard-coded into source control.
-  passphrase: env.sslPfxPassword
+    return null;
+  }
 };
 
-
-//-----------------------------------------------------\\
-//                   HTTPS SERVER
-//-----------------------------------------------------\\
-
-const server = https.createServer(
-  httpsOptions,
-  app
-);
-
+const secureServer = createSecureServer();
+const server = secureServer || http.createServer(app);
 
 //-----------------------------------------------------\\
 //                   SERVER BOOTSTRAP
 //-----------------------------------------------------\\
 
-// Start HustleHub Plus over HTTPS.
-//
-// Example:
-// https://localhost:5000/api/health
+//binding the listener here keeps app.js free of process level concerns and
+//lets the same app be served over either transport without being rebuilt
 server.listen(env.port, () => {
-  console.log(
-    'hustlehub+ secure api listening at https://localhost:' +
-    env.port
-  );
+  const scheme = secureServer ? 'https' : 'http';
+
+  console.log('hustlehub+ api listening at ' + scheme + '://localhost:' + env.port);
 });

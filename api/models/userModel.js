@@ -93,6 +93,13 @@ const findUserByEmail = async (email) => {
   return users.find((user) => user.email === normalised) || null;
 };
 
+//the lookup a verified token runs through, the id comes from the token rather
+//than from anything the caller typed
+const findUserById = async (id) => {
+  const users = await findAllUsers();
+  return users.find((user) => user.id === id) || null;
+};
+
 //inserts a new user and hands back the stored record, the caller supplies an
 //already hashed password because the model never sees a plain one
 //the duplicate check runs inside the same lock as the insert, a check made
@@ -132,5 +139,6 @@ module.exports = {
   toPublicUser,
   findAllUsers,
   findUserByEmail,
+  findUserById,
   createUser
 };

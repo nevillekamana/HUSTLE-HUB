@@ -1,0 +1,7 @@
+$kind: http-request
+name: GET /auth/admin - non-admin token (expect 403)
+url: "{{baseUrl}}/auth/admin"
+method: GET
+headers:
+  Authorization: Bearer {{token}}
+order: 1000

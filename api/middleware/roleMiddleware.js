@@ -1,50 +1,41 @@
 //-----------------------------------------------------\\
-//              HUSTLEHUB PLUS - ROLE 2
-//              SECURITY SPECIALIST
-//
-//              Student Number: ST10257779
+//                    SEAM — ROLE 2 OWNS THIS
 //-----------------------------------------------------\\
-
+//role 1 defines the interface only, role 2 implements the internals
 
 //-----------------------------------------------------\\
-//                 ROLE AUTHORIZATION
+//                        IMPORTS
 //-----------------------------------------------------\\
 
-/**
- * Restricts a route to specific user roles.
- *
- * Example:
- *
- * authorizeRoles('admin')
- *
- * authorizeRoles('client', 'freelancer')
- */
-const authorizeRoles = (...allowedRoles) => {
-  return (req, res, next) => {
+const httpStatus = require('../utils/httpStatus');
+const { sendFailure } = require('../utils/apiResponse');
 
-    // The authentication middleware must run first
-    // so that req.user contains the decoded JWT.
-    if (!req.user) {
-      return res.status(401).json({
-        message: 'Authentication is required'
-      });
-    }
+//-----------------------------------------------------\\
+//                      ROLE GUARD
+//-----------------------------------------------------\\
 
-    // Reject users whose role is not permitted
-    // to access the requested resource.
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
-        message: 'You do not have permission to access this resource'
-      });
-    }
+//runs after the auth guard and reads the role out of the verified claims, so
+//a caller cannot widen their own permissions by changing what they send
+//a known caller holding the wrong role is forbidden rather than unauthorised,
+//the difference being that signing in again would not help them
+const authorizeRoles = (...allowedRoles) => (req, res, next) => {
+  if (!req.auth) {
+    return sendFailure(res, httpStatus.UNAUTHORIZED, 'authentication is required');
+  }
 
-    next();
-  };
+  if (!allowedRoles.includes(req.auth.role)) {
+    return sendFailure(
+      res,
+      httpStatus.FORBIDDEN,
+      'you do not have permission to access this resource'
+    );
+  }
+
+  return next();
 };
 
-
 //-----------------------------------------------------\\
-//                       EXPORTS
+//                        EXPORTS
 //-----------------------------------------------------\\
 
 module.exports = {
