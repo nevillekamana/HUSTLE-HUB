@@ -11,7 +11,7 @@ const {
 } = require('../controllers/authController');
 const requireAuth = require('../middleware/requireAuth');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
-const { loginRateLimiter } = require('../middleware/rateLimitMiddleware');
+const { loginRateLimiter, registerRateLimiter } = require('../middleware/rateLimitMiddleware');
 const {
   validateRegister,
   validateLogin
@@ -29,7 +29,7 @@ const router = express.Router();
 //creates an account, answers 201 with the safe user object, 409 when the
 //address is taken and 400 when a field is missing or fails its format rule
 //validation runs first so a malformed body is refused before any lookup or hash
-router.post('/register', validateRegister, register);
+router.post('/register', registerRateLimiter, validateRegister, register);
 
 //verifies a credential pair, answers 200 with the safe user and a token, and
 //401 with one message whether the address or the password was wrong
