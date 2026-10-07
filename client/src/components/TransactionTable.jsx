@@ -2,6 +2,7 @@
 //                        IMPORTS
 //-----------------------------------------------------\\
 
+import { TABLE_CELL as CELL, TABLE_HEAD as HEAD, TABLE_NUMBER } from '@/components/tableStyles';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -22,9 +23,6 @@ const STATUS = {
   completed: ['success', 'Completed'],
   refunded: ['off', 'Refunded']
 };
-
-const HEAD = 'px-4.5 py-3 text-left text-xs font-bold tracking-[0.06em] whitespace-nowrap text-muted-foreground uppercase';
-const CELL = 'border-t-2 border-tint px-4.5 py-3.5';
 
 //wide enough that no column squeezes its text, a narrower screen scrolls the
 //table inside its card instead of the page
@@ -97,7 +95,7 @@ const TransactionTable = ({ transactions, people, labelledBy }) => (
                 </td>
               ))}
               <td className={cn(CELL, 'whitespace-nowrap')}>{formatDate(transaction.createdAt)}</td>
-              <td className={cn(CELL, 'text-right font-semibold whitespace-nowrap tabular-nums')}>
+              <td className={cn(CELL, TABLE_NUMBER, 'font-semibold')}>
                 {formatCents(transaction.amountCents)}
               </td>
               <td className={CELL}>

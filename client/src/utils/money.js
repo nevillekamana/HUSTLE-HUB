@@ -17,6 +17,19 @@ const formatCents = (cents) => {
   return sign + 'R ' + grouped + '.' + fraction;
 };
 
+//a short form for tight spaces such as the top of a chart column, R 950,
+//R 1.5k or R 2.3m, the full amount is always shown somewhere beside it
+const formatCentsShort = (cents) => {
+  const rands = Number.isFinite(Number(cents)) ? Math.max(0, Number(cents)) / 100 : 0;
+  const short = (value, unit) => 'R ' + (Math.round(value * 10) / 10).toFixed(1).replace(/\.0$/, '') + unit;
+
+  if (Math.round(rands) < 1000) {
+    return 'R ' + Math.round(rands);
+  }
+
+  return rands < 999950 ? short(rands / 1000, 'k') : short(rands / 1000000, 'm');
+};
+
 //a rand amount typed into a form, as whole cents (plan section 8.6), or null
 //when the text is not a plain number, so the caller decides what an empty or
 //bad value means
@@ -48,4 +61,4 @@ const toRands = (cents) => {
 //                        EXPORTS
 //-----------------------------------------------------\\
 
-export { formatCents, toCents, toRands };
+export { formatCents, formatCentsShort, toCents, toRands };

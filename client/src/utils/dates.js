@@ -17,8 +17,16 @@ const formatDate = (value) => {
   return date.getDate() + ' ' + MONTHS[date.getMonth()] + ' ' + date.getFullYear();
 };
 
+//"2026-09" as the api groups income, shown as "Sep 2026"
+const MONTH_KEY = /^(\d{4})-(0[1-9]|1[0-2])$/;
+
+const formatMonth = (key) => {
+  const match = MONTH_KEY.exec(String(key));
+  return match ? MONTHS[Number(match[2]) - 1] + ' ' + match[1] : '—';
+};
+
 //-----------------------------------------------------\\
 //                        EXPORTS
 //-----------------------------------------------------\\
 
-export { MONTHS, formatDate };
+export { MONTHS, MONTH_KEY, formatDate, formatMonth };

@@ -8,6 +8,7 @@ import { GuestRoute, HOME, ProtectedRoute } from '@/auth/ProtectedRoute';
 import AppShell from '@/components/AppShell';
 import BrowseGigs from '@/pages/BrowseGigs';
 import GigDetail from '@/pages/GigDetail';
+import Income from '@/pages/Income';
 import Login from '@/pages/Login';
 import MyBookings from '@/pages/MyBookings';
 import MyGigs from '@/pages/MyGigs';
@@ -51,7 +52,7 @@ const App = () => (
 
           <Route element={<ProtectedRoute roles={FREELANCER} />}>
             <Route path="my-gigs" element={<MyGigs />} />
-            <Route path="income" element={<Placeholder lead="Your" sticker="income" pageTitle="Income" />} />
+            <Route path="income" element={<Income />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={CLIENT_OR_FREELANCER} />}>
