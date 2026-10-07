@@ -68,7 +68,7 @@ const Transactions = () => {
     body = slow && (
       <Card className="gap-0 py-0">
         <p role="status" className="sr-only">
-          Loading your payments
+          Loading your payments…
         </p>
         <ListHeader title="Payment history">
           <Skeleton aria-hidden="true" className="h-4 w-44" />

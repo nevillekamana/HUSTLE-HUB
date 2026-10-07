@@ -80,7 +80,7 @@ const ReferenceTicket = ({ reference }) => {
     <div className="flex flex-col gap-1.5">
       <p className={EYEBROW}>Payment reference</p>
       <div className="relative flex items-center justify-between gap-2.5 rounded-xl border-2 border-dashed border-primary bg-background px-4 py-3 before:absolute before:top-1/2 before:-left-2.5 before:-mt-2 before:size-4 before:rounded-full before:border-2 before:border-primary before:bg-card before:content-[''] after:absolute after:top-1/2 after:-right-2.5 after:-mt-2 after:size-4 after:rounded-full after:border-2 after:border-primary after:bg-card after:content-['']">
-        <span ref={textRef} className="font-mono text-[17px] font-bold tracking-[0.06em] break-all">
+        <span ref={textRef} translate="no" className="font-mono text-[17px] font-bold tracking-[0.06em] break-all">
           {reference}
         </span>
         <Button type="button" variant="outline" size="icon-sm" onClick={copy} aria-label="Copy payment reference">

@@ -198,7 +198,7 @@ const Admin = () => {
           id="all-users"
           title="Users"
           nouns={['user', 'users']}
-          loading="Loading users"
+          loading="Loading users…"
           ghost={<UserTableSkeleton />}
           empty={['No users yet', 'New accounts appear here as people register.']}
           pagerLabel="Pages of users"
@@ -209,7 +209,7 @@ const Admin = () => {
           id="all-payments"
           title="Transactions"
           nouns={['payment', 'payments']}
-          loading="Loading payments"
+          loading="Loading payments…"
           ghost={<TransactionTableSkeleton people={BOTH} />}
           empty={['No payments yet', 'Payments appear here as clients book gigs.']}
           pagerLabel="Pages of transactions"

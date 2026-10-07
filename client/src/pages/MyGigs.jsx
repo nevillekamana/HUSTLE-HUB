@@ -232,7 +232,7 @@ const MyGigs = () => {
     body = slow && (
       <Card className="gap-0 py-0">
         <p role="status" className="sr-only">
-          Loading your gigs
+          Loading your gigs…
         </p>
         <ListHeader title={LIST_TITLE}>
           <Skeleton aria-hidden="true" className="h-4 w-28" />

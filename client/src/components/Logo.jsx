@@ -49,7 +49,8 @@ const LogoMark = ({ onDark = false, className }) => (
 //-----------------------------------------------------\\
 
 //the mark and the wordmark together, the name stays real text so it is read
-//out by a screen reader and found by search
+//out by a screen reader and found by search, and a page translator leaves
+//the brand name as it is
 //large is the showpiece size for the sign in panel, a step smaller below the
 //lg width where that panel is narrower
 const Logo = ({ onDark = false, large = false, className }) => (
@@ -64,7 +65,7 @@ const Logo = ({ onDark = false, large = false, className }) => (
     )}
   >
     <LogoMark onDark={onDark} className={large ? 'size-18 max-lg:size-14' : 'size-11.5 max-sm:size-10'} />
-    <span>
+    <span translate="no">
       HustleHub<span className={onDark ? 'text-aqua' : 'text-primary'}>+</span>
     </span>
   </span>

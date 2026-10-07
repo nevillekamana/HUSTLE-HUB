@@ -56,7 +56,7 @@ const MyBookings = () => {
     body = slow && (
       <Card className="gap-0 py-0">
         <p role="status" className="sr-only">
-          Loading your bookings
+          Loading your bookings…
         </p>
         <ListHeader title={copy.list}>
           <Skeleton aria-hidden="true" className="h-4 w-24" />

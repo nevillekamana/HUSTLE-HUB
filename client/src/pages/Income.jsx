@@ -51,7 +51,7 @@ const Income = () => {
     body = slow && (
       <>
         <p role="status" className="sr-only">
-          Loading your income
+          Loading your income…
         </p>
         <div className={TILES}>
           <StatTileSkeleton hero className={HERO} />

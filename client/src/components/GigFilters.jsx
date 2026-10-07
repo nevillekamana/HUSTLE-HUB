@@ -140,6 +140,7 @@ const GigFilters = ({ applied, onApply, onClear }) => {
             value={drafts.q}
             onChange={change}
             maxLength={50}
+            autoComplete="off"
             placeholder="Logo, tutoring, copywriting…"
             className="max-lg:col-span-2"
           />

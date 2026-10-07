@@ -6,7 +6,7 @@
 //message is shown only where it is written for people and safe to repeat
 const MESSAGES = Object.freeze({
   sessionExpired: 'Your session has expired, please sign in again',
-  forbidden: "You don't have permission to do that",
+  forbidden: 'You don’t have permission to do that',
   notFound: 'Not found',
   generic: 'Something went wrong, please try again'
 });

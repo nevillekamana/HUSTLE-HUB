@@ -121,8 +121,14 @@
     @apply border-border outline-ring/50;
   }
 
+  /* the one light look for native controls and scrollbars too, a tap acts at
+     once without waiting to see if it is a double tap zoom, and the flash a
+     phone draws on a tapped link is the brand tint rather than grey */
   html {
     @apply font-sans;
+    color-scheme: light;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgb(15 82 87 / 0.12);
   }
 
   body {

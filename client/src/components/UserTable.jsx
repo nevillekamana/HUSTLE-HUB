@@ -82,7 +82,7 @@ const UserTable = ({ users, labelledBy }) => (
                   <span className="break-words">{name}</span>
                 </span>
               </th>
-              <td className={cn(CELL, 'min-w-52 break-words')}>
+              <td translate="no" className={cn(CELL, 'min-w-52 break-words')}>
                 <Email address={user.email} />
               </td>
               <td className={CELL}>

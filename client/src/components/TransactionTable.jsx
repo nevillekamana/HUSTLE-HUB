@@ -75,6 +75,7 @@ const TransactionTable = ({ transactions, people, labelledBy }) => (
             <tr key={transaction.id}>
               <th
                 scope="row"
+                translate="no"
                 className={cn(CELL, 'text-left font-mono text-[13px] font-semibold tracking-[0.04em] whitespace-nowrap')}
               >
                 {transaction.reference}
