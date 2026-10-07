@@ -27,25 +27,26 @@ const PILL =
 
 //every page is a real link, so back and forward, a new tab and a shared
 //address all land on the same page of results
-//hrefFor turns a page number into the address to go to
-const Pager = ({ page, pages, hrefFor }) => {
+//hrefFor turns a page number into the address to go to, and a page with
+//more than one list names each pager after its list
+const Pager = ({ page, pages, hrefFor, label = 'Pagination', className }) => {
   if (pages <= 1) {
     return null;
   }
 
-  const edge = (target, label, enabled) =>
+  const edge = (target, text, enabled) =>
     enabled ? (
       <Link to={hrefFor(target)} className={cn(PILL, 'bg-card text-primary hover:bg-tint')}>
-        {label}
+        {text}
       </Link>
     ) : (
       <span aria-disabled="true" className={cn(PILL, 'cursor-not-allowed bg-card text-primary opacity-50')}>
-        {label}
+        {text}
       </span>
     );
 
   return (
-    <nav aria-label="Pagination" className="mt-7 flex flex-wrap items-center justify-center gap-2">
+    <nav aria-label={label} className={cn('mt-7 flex flex-wrap items-center justify-center gap-2', className)}>
       {edge(page - 1, 'Previous', page > 1)}
       {pageWindow(page, pages).map((entry) =>
         typeof entry === 'string' ? (

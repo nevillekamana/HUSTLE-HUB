@@ -73,7 +73,7 @@ const Transactions = () => {
         <ListHeader title="Payment history">
           <Skeleton aria-hidden="true" className="h-4 w-44" />
         </ListHeader>
-        <TransactionTableSkeleton />
+        <TransactionTableSkeleton people={copy.people} />
       </Card>
     );
   } else if (state === 'error') {

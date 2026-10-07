@@ -2,9 +2,9 @@
 //                        IMPORTS
 //-----------------------------------------------------\\
 
+import TableSkeleton from '@/components/TableSkeleton';
 import { TABLE_CELL as CELL, TABLE_HEAD as HEAD, TABLE_NUMBER } from '@/components/tableStyles';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { bookedGig } from '@/utils/bookings';
 import { categoryOrOther } from '@/utils/categories';
@@ -113,26 +113,8 @@ const TransactionTable = ({ transactions, people, labelledBy }) => (
 //                     GHOST TABLE
 //-----------------------------------------------------\\
 
-//the shape of the table while it loads, drawn with plain boxes so it is not
-//mistaken for a real table by a screen reader
-const TransactionTableSkeleton = ({ columns = 6, count = 4 }) => (
-  <div aria-hidden="true" className="overflow-hidden">
-    <div className="min-w-170">
-      <div className="flex gap-6 px-4.5 py-3.5">
-        {Array.from({ length: columns }, (_, index) => (
-          <Skeleton key={index} className="h-3 flex-1" />
-        ))}
-      </div>
-      {Array.from({ length: count }, (_, row) => (
-        <div key={row} className="flex items-center gap-6 border-t-2 border-tint px-4.5 py-4">
-          {Array.from({ length: columns }, (_, index) => (
-            <Skeleton key={index} className={cn('flex-1', index === columns - 1 ? 'h-6 rounded-full' : 'h-4')} />
-          ))}
-        </div>
-      ))}
-    </div>
-  </div>
-);
+//the shape of the table while it loads, one ghost column per real one
+const TransactionTableSkeleton = ({ people, count }) => <TableSkeleton columns={people.length + 5} count={count} />;
 
 //-----------------------------------------------------\\
 //                        EXPORTS

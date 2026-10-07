@@ -6,6 +6,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AuthProvider from '@/auth/AuthContext';
 import { GuestRoute, HOME, ProtectedRoute } from '@/auth/ProtectedRoute';
 import AppShell from '@/components/AppShell';
+import Admin from '@/pages/Admin';
 import BrowseGigs from '@/pages/BrowseGigs';
 import GigDetail from '@/pages/GigDetail';
 import Income from '@/pages/Income';
@@ -13,7 +14,6 @@ import Login from '@/pages/Login';
 import MyBookings from '@/pages/MyBookings';
 import MyGigs from '@/pages/MyGigs';
 import NotFound from '@/pages/NotFound';
-import Placeholder from '@/pages/Placeholder';
 import Register from '@/pages/Register';
 import Transactions from '@/pages/Transactions';
 
@@ -61,7 +61,7 @@ const App = () => (
           </Route>
 
           <Route element={<ProtectedRoute roles={ADMIN} />}>
-            <Route path="admin" element={<Placeholder lead="Admin" sticker="overview" pageTitle="Admin" />} />
+            <Route path="admin" element={<Admin />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
