@@ -24,7 +24,8 @@ const generateToken = (payload) =>
 //expired or signed with a different secret
 //it throws rather than returning null so a caller cannot forget to check, the
 //auth middleware catches it and answers with a 401
-const verifyToken = (token) => jwt.verify(token, env.jwtSecret);
+//only the algorithm the tokens are signed with is accepted
+const verifyToken = (token) => jwt.verify(token, env.jwtSecret, { algorithms: ['HS256'] });
 
 //-----------------------------------------------------\\
 //                        EXPORTS
