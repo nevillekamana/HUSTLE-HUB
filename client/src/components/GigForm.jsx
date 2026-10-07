@@ -66,7 +66,8 @@ const RandSign = ({ className, ...props }) => (
 //for an edit whose gig no longer exists
 const GigForm = ({ gig, onSaved, onCancel, onMissing }) => {
   const editing = Boolean(gig);
-  const [values, setValues] = useState(() => startingValues(gig));
+  const [starting] = useState(() => startingValues(gig));
+  const [values, setValues] = useState(starting);
   const [errors, setErrors] = useState({});
   const [banner, setBanner] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -74,12 +75,29 @@ const GigForm = ({ gig, onSaved, onCancel, onMissing }) => {
   const descriptionRef = useRef(null);
   const categoryRef = useRef(null);
   const priceRef = useRef(null);
+  const unsaved = !saving && FIELDS.some((field) => values[field] !== starting[field]);
 
   useEffect(() => {
     if (titleRef.current) {
       titleRef.current.focus();
     }
   }, []);
+
+  //closing or reloading the tab with typed but unsaved changes asks first,
+  //the browser words the question itself
+  useEffect(() => {
+    if (!unsaved) {
+      return;
+    }
+
+    const warn = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [unsaved]);
 
   const showErrors = (found) => {
     flushSync(() => setErrors(found));

@@ -79,6 +79,13 @@
   --color-off: #4A5358;
   --color-off-tint: #ECEDEE;
 
+  /* the one series colour for charts, a brighter lagoon teal, the brand
+     primary reads too dark and grey for a data mark, checked with the
+     dataviz palette validator against the white card (lightness, chroma,
+     3:1 contrast), and a lighter step of the same hue for hover */
+  --color-chart: #00909A;
+  --color-chart-hover: #33A6AE;
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -114,8 +121,14 @@
     @apply border-border outline-ring/50;
   }
 
+  /* the one light look for native controls and scrollbars too, a tap acts at
+     once without waiting to see if it is a double tap zoom, and the flash a
+     phone draws on a tapped link is the brand tint rather than grey */
   html {
     @apply font-sans;
+    color-scheme: light;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgb(15 82 87 / 0.12);
   }
 
   body {

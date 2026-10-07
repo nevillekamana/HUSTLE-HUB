@@ -141,7 +141,7 @@ const BrowseGigs = () => {
     body = slow && (
       <>
         <p role="status" className="sr-only">
-          Loading gigs
+          Loading gigs…
         </p>
         <Skeleton aria-hidden="true" className="mb-3.5 h-5 w-44" />
         <div aria-hidden="true" className="grid grid-cols-3 gap-5.5 max-lg:grid-cols-2 max-sm:grid-cols-1">

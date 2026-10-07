@@ -29,17 +29,23 @@ const PrintEmblem = ({ mark = '?' }) => (
 
 //what a list says when there is nothing in it, the emblem, a short title,
 //one line of help and usually a way forward
-//the title is a real heading so it shows up in a screen reader's outline
-const EmptyState = ({ title, text, mark, children }) => (
+//the title is a real heading so it shows up in a screen reader's outline,
+//one level below the heading of the card it sits in
+const EmptyContent = ({ title, text, mark, heading: Heading = 'h2', children }) => (
+  <Empty>
+    <PrintEmblem mark={mark} />
+    <EmptyTitle>
+      <Heading>{title}</Heading>
+    </EmptyTitle>
+    <EmptyDescription>{text}</EmptyDescription>
+    {children}
+  </Empty>
+);
+
+//the same in a card of its own, for a page whose only list is empty
+const EmptyState = (props) => (
   <Card className="py-0">
-    <Empty>
-      <PrintEmblem mark={mark} />
-      <EmptyTitle>
-        <h2>{title}</h2>
-      </EmptyTitle>
-      <EmptyDescription>{text}</EmptyDescription>
-      {children}
-    </Empty>
+    <EmptyContent {...props} />
   </Card>
 );
 
@@ -47,5 +53,5 @@ const EmptyState = ({ title, text, mark, children }) => (
 //                        EXPORTS
 //-----------------------------------------------------\\
 
-export { PrintEmblem };
+export { EmptyContent, PrintEmblem };
 export default EmptyState;

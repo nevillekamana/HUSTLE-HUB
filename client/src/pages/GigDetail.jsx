@@ -103,13 +103,13 @@ const GigDetail = () => {
       <>
         <title>Gig · HustleHub+</title>
         <h1 tabIndex={-1} className="sr-only">
-          Loading gig
+          Loading gig…
         </h1>
         <BackLink to={back} />
         {slow && (
           <>
             <p role="status" className="sr-only">
-              Loading gig
+              Loading gig…
             </p>
             <DetailSkeleton />
           </>

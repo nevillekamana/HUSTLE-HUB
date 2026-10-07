@@ -6,13 +6,16 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AuthProvider from '@/auth/AuthContext';
 import { GuestRoute, HOME, ProtectedRoute } from '@/auth/ProtectedRoute';
 import AppShell from '@/components/AppShell';
+import Admin from '@/pages/Admin';
 import BrowseGigs from '@/pages/BrowseGigs';
 import GigDetail from '@/pages/GigDetail';
+import Income from '@/pages/Income';
 import Login from '@/pages/Login';
+import MyBookings from '@/pages/MyBookings';
 import MyGigs from '@/pages/MyGigs';
 import NotFound from '@/pages/NotFound';
-import Placeholder from '@/pages/Placeholder';
 import Register from '@/pages/Register';
+import Transactions from '@/pages/Transactions';
 
 //-----------------------------------------------------\\
 //                    ROLES PER ROUTE
@@ -49,19 +52,16 @@ const App = () => (
 
           <Route element={<ProtectedRoute roles={FREELANCER} />}>
             <Route path="my-gigs" element={<MyGigs />} />
-            <Route path="income" element={<Placeholder lead="Your" sticker="income" pageTitle="Income" />} />
+            <Route path="income" element={<Income />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={CLIENT_OR_FREELANCER} />}>
-            <Route path="bookings" element={<Placeholder lead="My" sticker="bookings" pageTitle="My bookings" />} />
-            <Route
-              path="transactions"
-              element={<Placeholder lead="Your" sticker="transactions" pageTitle="Transactions" />}
-            />
+            <Route path="bookings" element={<MyBookings />} />
+            <Route path="transactions" element={<Transactions />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={ADMIN} />}>
-            <Route path="admin" element={<Placeholder lead="Admin" sticker="overview" pageTitle="Admin" />} />
+            <Route path="admin" element={<Admin />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

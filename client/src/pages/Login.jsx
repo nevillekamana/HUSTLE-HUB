@@ -180,14 +180,14 @@ const Login = () => {
           </h2>
           <p className="text-[13px] text-muted-foreground">
             Mock mode only. Every demo account uses the password{' '}
-            <code className="rounded-md bg-tint px-1.5 py-0.5 text-[13px]">{DEMO_PASSWORD}</code>.
+            <code translate="no" className="rounded-md bg-tint px-1.5 py-0.5 text-[13px]">{DEMO_PASSWORD}</code>.
           </p>
           <ul className="flex flex-col gap-2">
             {DEMO_ACCOUNTS.map(([role, email]) => (
               <li key={email} className="flex items-center justify-between gap-2.5">
                 <span className="min-w-0">
                   <strong className="block">{role}</strong>
-                  <span className="block truncate text-[13px] text-muted-foreground">{email}</span>
+                  <span translate="no" className="block truncate text-[13px] text-muted-foreground">{email}</span>
                 </span>
                 <Button type="button" variant="outline" size="sm" onClick={() => fillDemo(email)}>
                   Use this account

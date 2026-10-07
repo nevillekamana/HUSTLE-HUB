@@ -10,9 +10,11 @@ import * as api from '@/api/endpoints';
 import EmptyState from '@/components/EmptyState';
 import ErrorBanner from '@/components/ErrorBanner';
 import GigForm from '@/components/GigForm';
-import { MyGigList, MyGigRow, MyGigRowsSkeleton } from '@/components/MyGigRow';
+import ListHeader from '@/components/ListHeader';
+import { MyGigRow, MyGigRowsSkeleton } from '@/components/MyGigRow';
 import Notice from '@/components/Notice';
 import { PageHeader, Sticker } from '@/components/PageHeader';
+import { RowList } from '@/components/Rows';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,16 +33,7 @@ const GONE = 'That gig no longer exists, so it was taken off your list.';
 const editRequest = (state) =>
   state && typeof state.edit === 'string' ? { mode: 'edit', id: state.edit } : null;
 
-//the top of the list card, shown while loading too so the rows do not jump
-//when they arrive, the heading takes focus when a row is removed
-const ListHeader = ({ headingRef, children }) => (
-  <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-2 border-tint px-4.5 py-3.5 max-sm:px-3.5">
-    <h2 ref={headingRef} tabIndex={-1} className="text-[19px] font-bold">
-      Your listings
-    </h2>
-    {children}
-  </div>
-);
+const LIST_TITLE = 'Your listings';
 
 //-----------------------------------------------------\\
 //                       MY GIGS
@@ -239,9 +232,9 @@ const MyGigs = () => {
     body = slow && (
       <Card className="gap-0 py-0">
         <p role="status" className="sr-only">
-          Loading your gigs
+          Loading your gigs…
         </p>
-        <ListHeader>
+        <ListHeader title={LIST_TITLE}>
           <Skeleton aria-hidden="true" className="h-4 w-28" />
         </ListHeader>
         <MyGigRowsSkeleton />
@@ -263,12 +256,12 @@ const MyGigs = () => {
 
     body = (
       <Card className="gap-0 py-0">
-        <ListHeader headingRef={listHeadingRef}>
+        <ListHeader title={LIST_TITLE} headingRef={listHeadingRef}>
           <p className="text-sm text-muted-foreground">
             {active + ' active' + (paused > 0 ? ', ' + paused + ' paused' : '')}
           </p>
         </ListHeader>
-        <MyGigList ref={listRef}>
+        <RowList ref={listRef}>
           {gigs.map((gig) => (
             <MyGigRow
               key={gig.id}
@@ -282,7 +275,7 @@ const MyGigs = () => {
               onDelete={remove}
             />
           ))}
-        </MyGigList>
+        </RowList>
       </Card>
     );
   }

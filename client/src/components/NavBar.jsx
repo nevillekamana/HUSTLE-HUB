@@ -99,7 +99,7 @@ const NavBar = () => {
                 to={to}
                 className={({ isActive }) =>
                   cn(
-                    'rounded-full px-4 py-2 font-semibold whitespace-nowrap',
+                    'rounded-full px-4 py-2 font-semibold whitespace-nowrap max-sm:px-2.5',
                     isActive ? 'bg-aqua text-ink' : 'text-white hover:bg-white/15'
                   )
                 }
