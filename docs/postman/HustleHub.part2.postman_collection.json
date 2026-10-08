@@ -180,7 +180,7 @@
             "const res = pm.response.json();",
             "pm.test('200', () => pm.response.to.have.status(200));",
             "pm.test('data.gigs array', () => pm.expect(res.data).to.have.property('gigs'));",
-            "pm.test('pagination fields', () => pm.expect(res.data).to.have.property('page') && pm.expect(res.data).to.have.property('limit'));
+            "pm.test('pagination fields', () => { pm.expect(res.data).to.have.property('page'); pm.expect(res.data).to.have.property('limit'); });"
           ] } }]
         }
       ]
