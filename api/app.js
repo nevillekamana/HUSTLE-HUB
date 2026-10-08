@@ -3,6 +3,7 @@
 //-----------------------------------------------------\\
 
 const express = require('express');
+const env = require('./config/env');
 const routes = require('./routes');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
@@ -18,9 +19,12 @@ const { apiRateLimiter } = require('./middleware/rateLimitMiddleware');
 
 const app = express();
 
-//trust the first proxy hop so client ips stay accurate behind the https
-//termination that role 2 configures, rate limiting in part 2 depends on this
-app.set('trust proxy', 1);
+//trusting the first proxy hop only makes sense once something is actually
+//terminating tls in front of the api (part 3's reverse proxy), locally and
+//in this deployment nothing sits in front of it, so trusting a client
+//supplied x-forwarded-for would let every ip keyed rate limit be bypassed by
+//just sending a new one on each request, see TRUST_PROXY in config/env.js
+app.set('trust proxy', env.trustProxy ? 1 : false);
 
 //express advertises itself in a response header by default, which tells an
 //attacker exactly what stack to target

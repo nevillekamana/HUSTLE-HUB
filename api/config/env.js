@@ -33,6 +33,26 @@ const MINIMUM_BCRYPT_ROUNDS = 10;
 const readRounds = (value, fallback) =>
   Math.max(readNumber(value, fallback), MINIMUM_BCRYPT_ROUNDS);
 
+//no database address is ever committed, an unset one outside development
+//means the api would silently bind to whatever is on localhost, so it is
+//treated the same way as a missing secret
+const readMongoUri = (value, nodeEnv) => {
+  if (value) {
+    return value;
+  }
+
+  if (nodeEnv !== 'development') {
+    console.error('[config] MONGO_URI is not set and NODE_ENV is ' + nodeEnv + ', refusing to start');
+    process.exit(1);
+  }
+
+  return 'mongodb://127.0.0.1:27017/hustlehub';
+};
+
+//only 'true' switches it on, so a typo or an unset value fails closed rather
+//than trusting a client supplied address by accident
+const readTrustProxy = (value) => value === 'true';
+
 //no signing secret is ever committed, so an unset one is generated for this
 //process alone, that lets a fresh clone boot without a .env while making the
 //omission obvious, every token stops verifying the moment the process restarts
@@ -80,7 +100,15 @@ const env = {
   //server falls back to http and says so rather than refusing to start
   sslPfxPath:
     process.env.SSL_PFX_PATH || path.join(__dirname, '..', 'certs', 'localhost.pfx'),
-  sslPfxPassword: process.env.SSL_PFX_PASSWORD || ''
+  sslPfxPassword: process.env.SSL_PFX_PASSWORD || '',
+
+  mongoUri: readMongoUri(process.env.MONGO_URI, nodeEnv),
+
+  //express trusts a client supplied X-Forwarded-For header once this is on,
+  //which only belongs behind a real reverse proxy terminating tls in front of
+  //the api, with nothing in front of it locally an attacker can claim a new
+  //address on every request and walk straight through an ip keyed rate limit
+  trustProxy: readTrustProxy(process.env.TRUST_PROXY)
 };
 
 //-----------------------------------------------------\\

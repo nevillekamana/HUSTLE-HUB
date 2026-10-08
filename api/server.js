@@ -8,6 +8,7 @@ const https = require('https');
 
 const app = require('./app');
 const env = require('./config/env');
+const { connectDatabase, disconnectDatabase } = require('./config/db');
 
 //-----------------------------------------------------\\
 //                       TRANSPORT
@@ -47,10 +48,43 @@ const server = secureServer || http.createServer(app);
 //                   SERVER BOOTSTRAP
 //-----------------------------------------------------\\
 
-//binding the listener here keeps app.js free of process level concerns and
-//lets the same app be served over either transport without being rebuilt
-server.listen(env.port, () => {
-  const scheme = secureServer ? 'https' : 'http';
+//the database is connected before the port is bound, so the api never
+//accepts a request it cannot actually serve
+const start = async () => {
+  try {
+    await connectDatabase();
+  } catch (error) {
+    //the reason is already logged by connectDatabase without the connection
+    //string, nothing more to add here, the process just cannot continue
+    process.exit(1);
+  }
 
-  console.log('hustlehub+ api listening at ' + scheme + '://localhost:' + env.port);
-});
+  //binding the listener here keeps app.js free of process level concerns and
+  //lets the same app be served over either transport without being rebuilt
+  server.listen(env.port, () => {
+    const scheme = secureServer ? 'https' : 'http';
+
+    console.log('hustlehub+ api listening at ' + scheme + '://localhost:' + env.port);
+  });
+};
+
+start();
+
+//-----------------------------------------------------\\
+//                  GRACEFUL SHUTDOWN
+//-----------------------------------------------------\\
+
+//a container or a dev server restart sends one of these, closing the
+//listener first means no new request is accepted while the database
+//connection underneath existing ones is torn down
+const shutdown = (signal) => {
+  console.log('[server] received ' + signal + ', shutting down');
+
+  server.close(async () => {
+    await disconnectDatabase();
+    process.exit(0);
+  });
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
