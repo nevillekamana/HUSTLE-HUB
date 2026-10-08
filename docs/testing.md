@@ -34,7 +34,12 @@ npm start
 Run Newman (from repo root)
 
 ~~~powershell
-npx newman run docs/postman/HustleHub.part2.postman_collection.json -e docs/postman/HustleHub.local.postman_environment.json --env-var baseUrl="https://localhost:5000/api" --env-var adminEmail="admin@example.test" --env-var adminPassword="Password1" --reporters cli,htmlextra --insecure --color off
+# A convenience script validates collection scripts first, then runs newman and produces an HTML report.
+# Arguments: -collection, -environment, -baseUrl, -adminEmail, -adminPassword
+pwsh ./docs/newman/run.ps1 -collection docs/postman/HustleHub.part2.postman_collection.json -environment docs/postman/HustleHub.local.postman_environment.json -baseUrl "https://localhost:5000/api" -adminEmail "admin@example.test" -adminPassword "Password1"
+
+# Or the raw newman command:
+# npx newman run docs/postman/HustleHub.part2.postman_collection.json -e docs/postman/HustleHub.local.postman_environment.json --env-var baseUrl="https://localhost:5000/api" --env-var adminEmail="admin@example.test" --env-var adminPassword="Password1" --reporters cli,htmlextra --insecure --color off
 ~~~
 
 Notes and caveats
