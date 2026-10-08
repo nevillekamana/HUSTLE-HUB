@@ -108,7 +108,14 @@ const env = {
   //which only belongs behind a real reverse proxy terminating tls in front of
   //the api, with nothing in front of it locally an attacker can claim a new
   //address on every request and walk straight through an ip keyed rate limit
-  trustProxy: readTrustProxy(process.env.TRUST_PROXY)
+  trustProxy: readTrustProxy(process.env.TRUST_PROXY),
+
+  //read only by scripts/seedAdmin.js, left empty rather than defaulted
+  //because an admin account is provisioned by whoever runs the script, not
+  //guessed at by the api
+  adminEmail: process.env.ADMIN_EMAIL || '',
+  adminPassword: process.env.ADMIN_PASSWORD || '',
+  adminFullName: process.env.ADMIN_FULL_NAME || ''
 };
 
 //-----------------------------------------------------\\
