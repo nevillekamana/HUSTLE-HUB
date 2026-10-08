@@ -6,6 +6,7 @@ const express = require('express');
 const httpStatus = require('../utils/httpStatus');
 const { sendSuccess } = require('../utils/apiResponse');
 const authRoutes = require('./authRoutes');
+const gigRoutes = require('./gigRoutes');
 
 //-----------------------------------------------------\\
 //                      API ROUTER
@@ -29,6 +30,7 @@ router.get('/health', (req, res) =>
 
 //feature routers are mounted below, each owning the paths under its prefix
 router.use('/auth', authRoutes);
+router.use('/gigs', gigRoutes);
 
 //-----------------------------------------------------\\
 //                        EXPORTS
