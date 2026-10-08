@@ -7,6 +7,10 @@ const httpStatus = require('../utils/httpStatus');
 const { sendSuccess } = require('../utils/apiResponse');
 const authRoutes = require('./authRoutes');
 const gigRoutes = require('./gigRoutes');
+const bookingRoutes = require('./bookingRoutes');
+const transactionRoutes = require('./transactionRoutes');
+const incomeRoutes = require('./incomeRoutes');
+const adminRoutes = require('./adminRoutes');
 
 //-----------------------------------------------------\\
 //                      API ROUTER
@@ -31,6 +35,10 @@ router.get('/health', (req, res) =>
 //feature routers are mounted below, each owning the paths under its prefix
 router.use('/auth', authRoutes);
 router.use('/gigs', gigRoutes);
+router.use('/bookings', bookingRoutes);
+router.use('/transactions', transactionRoutes);
+router.use('/income', incomeRoutes);
+router.use('/admin', adminRoutes);
 
 //-----------------------------------------------------\\
 //                        EXPORTS
