@@ -1,28 +1,55 @@
-import React from 'react'
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+//-----------------------------------------------------\\
+//                        IMPORTS
+//-----------------------------------------------------\\
 
-// Minimal ProtectedRoute for test: behaviour is what the app should implement.
-function ProtectedRoute({ user, role, children }){
-  if(!user) return <div>redirect:/login</div>
-  if(role === 'freelancer' && user.role !== 'freelancer') return <div>redirect:/</div>
-  return <>{children}</>
-}
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { describe, expect, it } from 'vitest';
+import { AuthContext } from '@/auth/useAuth';
+import { ProtectedRoute } from '@/auth/ProtectedRoute';
 
-describe('ProtectedRoute (isolated)', ()=>{
-  it('redirects unsigned visitors', ()=>{
-    render(<ProtectedRoute user={null}><div>ok</div></ProtectedRoute>)
-    expect(screen.getByText(/redirect:\/login/)).toBeTruthy()
-  })
+//-----------------------------------------------------\\
+//                 ROUTE GUARD TESTS
+//-----------------------------------------------------\\
 
-  it('redirects wrong role users', ()=>{
-    render(<ProtectedRoute user={{ role: 'client' }} role='freelancer'><div>ok</div></ProtectedRoute>)
-    expect(screen.getByText(/redirect:\//)).toBeTruthy()
-  })
+//the guards only shape the interface, the api is the real enforcement, but
+//a client who is signed out or in the wrong role should never see the page
 
-  it('allows freelancer', ()=>{
-    render(<ProtectedRoute user={{ role: 'freelancer' }} role='freelancer'><div>ok</div></ProtectedRoute>)
-    expect(screen.getByText('ok')).toBeTruthy()
-  })
-})
+const renderAt = (user) =>
+  render(
+    <AuthContext.Provider value={{ user, signedOut: false }}>
+      <MemoryRouter initialEntries={['/my-gigs']}>
+        <Routes>
+          <Route path="/login" element={<p>login page</p>} />
+          <Route path="/gigs" element={<p>browse page</p>} />
+          <Route
+            path="/my-gigs"
+            element={
+              <ProtectedRoute roles={['freelancer']}>
+                <p>freelancer page</p>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    </AuthContext.Provider>
+  );
+
+describe('ProtectedRoute', () => {
+  it('sends a signed out visitor to the login page', () => {
+    renderAt(null);
+    expect(screen.getByText('login page')).toBeInTheDocument();
+    expect(screen.queryByText('freelancer page')).not.toBeInTheDocument();
+  });
+
+  it('sends a client away from a freelancer only page', () => {
+    renderAt({ id: '1', role: 'client' });
+    expect(screen.getByText('browse page')).toBeInTheDocument();
+    expect(screen.queryByText('freelancer page')).not.toBeInTheDocument();
+  });
+
+  it('shows the page to a freelancer', () => {
+    renderAt({ id: '2', role: 'freelancer' });
+    expect(screen.getByText('freelancer page')).toBeInTheDocument();
+  });
+});

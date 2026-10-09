@@ -1,0 +1,29 @@
+﻿
+ RUN  v5.0.1 C:/Users/User/source/repos/EMWCCN/insy7314-2026-g2-insy7314-2026-hustlehub-plus-part1-st10434131/client
+
+ ✓ src/utils/validation.test.js > validateRegister > accepts a complete, valid sign up 4ms
+ ✓ src/utils/validation.test.js > validateRegister > reports every missing field at once 0ms
+ ✓ src/utils/validation.test.js > validateRegister > rejects a password with no digit, and one that is too short 1ms
+ ✓ src/utils/validation.test.js > validateRegister > rejects a malformed email address 0ms
+ ✓ src/utils/validation.test.js > validateRegister > refuses the admin role, which cannot be self assigned 0ms
+ ✓ src/utils/validation.test.js > validateRegister > rejects markup in a name 0ms
+ ✓ src/utils/validation.test.js > validateLogin > only asks that both fields are filled 0ms
+ ✓ src/utils/validation.test.js > validateGig > accepts a valid gig 1ms
+ ✓ src/utils/validation.test.js > validateGig > refuses angle brackets in gig text 0ms
+ ✓ src/utils/validation.test.js > validateGig > enforces the price range of R 1 to R 100 000 0ms
+ ✓ src/utils/validation.test.js > validateGig > refuses an unknown category 0ms
+ ✓ src/utils/validation.test.js > mapFieldErrors > keeps errors for known fields and flags the rest as unmatched 1ms
+ ✓ src/auth/ProtectedRoute.test.jsx > ProtectedRoute > sends a signed out visitor to the login page 45ms
+ ✓ src/auth/ProtectedRoute.test.jsx > ProtectedRoute > sends a client away from a freelancer only page 7ms
+ ✓ src/auth/ProtectedRoute.test.jsx > ProtectedRoute > shows the page to a freelancer 5ms
+ ✓ src/pages/Login.test.jsx > Login page rendering > shows the heading, both fields, the button and a link to register 241ms
+ ✓ src/pages/Login.test.jsx > Login page interaction > shows field errors and does not call the api when the form is empty 112ms
+ ✓ src/pages/Login.test.jsx > Login page interaction > submits the trimmed email and the password as typed 700ms
+ ✓ src/pages/Login.test.jsx > Login page interaction > shows the api message and clears the password after a failed sign in 1057ms
+ ✓ src/pages/Login.test.jsx > Login page interaction > never renders a raw error, only the safe generic sentence 699ms
+
+ Test Files  3 passed (3)
+      Tests  20 passed (20)
+   Start at  23:07:02
+   Duration  6.06s (environment 52%, tests 28%, setup 8%, import 6%, transform 5%, worker 1%)
+

@@ -1,53 +1,99 @@
-import { describe, it, expect } from 'vitest'
+//-----------------------------------------------------\\
+//                        IMPORTS
+//-----------------------------------------------------\\
 
-// Local copies of validation rules mirroring the client's expected behaviour.
-const categories = ['design','writing','development','marketing','tutoring','other']
+import { describe, expect, it } from 'vitest';
+import { mapFieldErrors, validateGig, validateLogin, validateRegister } from '@/utils/validation';
 
-function isValidEmail(email){
-  if(!email || typeof email !== 'string') return false
-  // simple email regex for tests
-  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)
-}
+//-----------------------------------------------------\\
+//                  FORM VALIDATION TESTS
+//-----------------------------------------------------\\
 
-function isStrongPassword(p){
-  if(typeof p !== 'string') return false
-  if(p.length < 8 || p.length > 128) return false
-  return /[A-Za-z]/.test(p) && /[0-9]/.test(p)
-}
+//these rules mirror the api's, so a regression here means the forms and the
+//backend have drifted apart
 
-function validateGig({ title, description, category, priceRands }){
-  const errors = {}
-  if(!title || title.trim().length < 3) errors.title = 'title too short'
-  if(!description || description.trim().length < 10) errors.description = 'description too short'
-  if(!categories.includes((category||'').toLowerCase())) errors.category = 'unknown category'
-  const priceCents = Math.round((Number(priceRands) || 0) * 100)
-  if(!Number.isInteger(priceCents) || priceCents < 100 || priceCents > 10000000) errors.price = 'price out of range'
-  if(/[<>]/.test(title) || /[<>]/.test(description)) errors.markup = 'markup not allowed'
-  return { valid: Object.keys(errors).length === 0, errors, priceCents }
-}
+const goodRegister = {
+  fullName: "Thandi O'Neil-Dlamini",
+  email: 'thandi@example.co.za',
+  password: 'Passw0rdOK',
+  role: 'freelancer'
+};
 
-describe('validation rules', () => {
-  it('email validation accepts good emails', () => {
-    expect(isValidEmail('a@b.com')).toBe(true)
-    expect(isValidEmail('bad')).toBe(false)
-  })
+describe('validateRegister', () => {
+  it('accepts a complete, valid sign up', () => {
+    expect(validateRegister(goodRegister)).toEqual({});
+  });
 
-  it('password strength rule enforces length and digit+letter', () => {
-    expect(isStrongPassword('Password1')).toBe(true)
-    expect(isStrongPassword('short1')).toBe(false)
-    expect(isStrongPassword('allletters')).toBe(false)
-  })
+  it('reports every missing field at once', () => {
+    const errors = validateRegister({});
+    expect(Object.keys(errors).sort()).toEqual(['email', 'fullName', 'password', 'role']);
+  });
 
-  it('gig validation enforces fields and rands->cents conversion', () => {
-    const ok = validateGig({ title: 'Good gig', description: 'Long enough description', category: 'development', priceRands: '10' })
-    expect(ok.valid).toBe(true)
-    expect(ok.priceCents).toBe(1000)
+  it('rejects a password with no digit, and one that is too short', () => {
+    expect(validateRegister({ ...goodRegister, password: 'onlyletters' }).password).toMatch(/letter and one number/);
+    expect(validateRegister({ ...goodRegister, password: 'a1' }).password).toMatch(/between 8 and 128/);
+  });
 
-    const bad = validateGig({ title: 'x', description: 'short', category: 'unknown', priceRands: '0.5' })
-    expect(bad.valid).toBe(false)
-    expect(bad.errors).toHaveProperty('title')
-    expect(bad.errors).toHaveProperty('description')
-    expect(bad.errors).toHaveProperty('category')
-    expect(bad.errors).toHaveProperty('price')
-  })
-})
+  it('rejects a malformed email address', () => {
+    expect(validateRegister({ ...goodRegister, email: 'not-an-email' }).email).toMatch(/valid email/);
+  });
+
+  it('refuses the admin role, which cannot be self assigned', () => {
+    expect(validateRegister({ ...goodRegister, role: 'admin' }).role).toMatch(/client or freelancer/);
+  });
+
+  it('rejects markup in a name', () => {
+    expect(validateRegister({ ...goodRegister, fullName: '<script>alert(1)</script>' }).fullName).toBeTruthy();
+  });
+});
+
+describe('validateLogin', () => {
+  it('only asks that both fields are filled', () => {
+    expect(validateLogin({ email: '', password: '' })).toEqual({
+      email: 'is required',
+      password: 'is required'
+    });
+    expect(validateLogin({ email: 'x', password: 'y' })).toEqual({});
+  });
+});
+
+describe('validateGig', () => {
+  const goodGig = {
+    title: 'Logo design',
+    description: 'A clean logo with two revisions included.',
+    category: 'design',
+    price: '250.50'
+  };
+
+  it('accepts a valid gig', () => {
+    expect(validateGig(goodGig)).toEqual({});
+  });
+
+  it('refuses angle brackets in gig text', () => {
+    expect(validateGig({ ...goodGig, title: 'Hi <b>there</b>' }).title).toMatch(/must not contain/);
+  });
+
+  it('enforces the price range of R 1 to R 100 000', () => {
+    expect(validateGig({ ...goodGig, price: '0.50' }).price).toMatch(/between R 1 and R 100 000/);
+    expect(validateGig({ ...goodGig, price: '100001' }).price).toMatch(/between R 1 and R 100 000/);
+  });
+
+  it('refuses an unknown category', () => {
+    expect(validateGig({ ...goodGig, category: 'hacking' }).category).toMatch(/must be one of/);
+  });
+});
+
+describe('mapFieldErrors', () => {
+  it('keeps errors for known fields and flags the rest as unmatched', () => {
+    const result = mapFieldErrors(
+      [
+        { field: 'email', message: 'is required' },
+        { field: 'rateLimit', message: 'try later' }
+      ],
+      ['email', 'password']
+    );
+
+    expect(result.errors).toEqual({ email: 'is required' });
+    expect(result.unmatched).toBe(true);
+  });
+});

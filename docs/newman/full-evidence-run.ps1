@@ -42,19 +42,19 @@ $tempDir     = [System.IO.Path]::GetTempPath()
 
 function Stop-ApiOnPort([int]$p) {
   if (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue) {
-	Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue |
-	  ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
+    Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue |
+      ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
   }
 }
 
 function Test-TcpPort([string]$hostName, [int]$p) {
   try {
-	$c = New-Object System.Net.Sockets.TcpClient
-	$iar = $c.BeginConnect($hostName, $p, $null, $null)
-	$ok = $iar.AsyncWaitHandle.WaitOne(2000)
-	if ($ok) { $c.EndConnect($iar) }
-	$c.Close()
-	return $ok
+    $c = New-Object System.Net.Sockets.TcpClient
+    $iar = $c.BeginConnect($hostName, $p, $null, $null)
+    $ok = $iar.AsyncWaitHandle.WaitOne(2000)
+    if ($ok) { $c.EndConnect($iar) }
+    $c.Close()
+    return $ok
   } catch { return $false }
 }
 
@@ -67,7 +67,7 @@ if (-not (Test-Path $collection)) { throw "Collection not found: $collection" }
 if ($MongoUriTemplate -match "^mongodb://(127\.0\.0\.1|localhost):(\d+)") {
   $mongoPort = [int]$Matches[2]
   if (-not (Test-TcpPort "127.0.0.1" $mongoPort)) {
-	throw "MongoDB is not reachable on 127.0.0.1:$mongoPort. Install MongoDB Community Server as a service (or pass -MongoUriTemplate for Atlas) and try again."
+    throw "MongoDB is not reachable on 127.0.0.1:$mongoPort. Install MongoDB Community Server as a service (or pass -MongoUriTemplate for Atlas) and try again."
   }
   Write-Host "  MongoDB is reachable on 127.0.0.1:$mongoPort"
 }
@@ -102,69 +102,82 @@ for ($i = 1; $i -le $Runs; $i++) {
   $env:ADMIN_FULL_NAME = "Test Admin"
 
   try {
-	Push-Location $api
-	npm run seed:admin
-	if ($LASTEXITCODE -ne 0) { throw "npm run seed:admin failed." }
-	Pop-Location
+    Push-Location $api
+    npm run seed:admin
+    if ($LASTEXITCODE -ne 0) { throw "npm run seed:admin failed." }
+    Pop-Location
 
-	$logOut = Join-Path $tempDir "hustlehub-api-$i.out.log"
-	$logErr = Join-Path $tempDir "hustlehub-api-$i.err.log"
-	$startArgs = @{
-	  FilePath = "node"; ArgumentList = "server.js"; WorkingDirectory = $api; PassThru = $true
-	  RedirectStandardOutput = $logOut; RedirectStandardError = $logErr
-	}
-	if ($onWindows) { $startArgs["WindowStyle"] = "Hidden" }
-	$proc = Start-Process @startArgs
+    $logOut = Join-Path $tempDir "hustlehub-api-$i.out.log"
+    $logErr = Join-Path $tempDir "hustlehub-api-$i.err.log"
+    $startArgs = @{
+      FilePath = "node"; ArgumentList = "server.js"; WorkingDirectory = $api; PassThru = $true
+      RedirectStandardOutput = $logOut; RedirectStandardError = $logErr
+    }
+    if ($onWindows) { $startArgs["WindowStyle"] = "Hidden" }
+    $proc = Start-Process @startArgs
 
-	$healthy = $false
-	$deadline = (Get-Date).AddSeconds(45)
-	while ((Get-Date) -lt $deadline) {
-	  try {
-		$r = Invoke-RestMethod -Uri "$baseUrl/health" -TimeoutSec 2
-		if ($r.data.status -eq "ok") { $healthy = $true; break }
-	  } catch { }
-	  Start-Sleep -Milliseconds 700
-	}
-	if (-not $healthy) {
-	  Write-Host "API output:" -ForegroundColor Yellow
-	  Get-Content $logOut, $logErr -ErrorAction SilentlyContinue | Write-Host
-	  throw "The API did not answer on $baseUrl/health. If it printed 'listening at https', comment out SSL_PFX_PATH in api/.env and try again."
-	}
-	Write-Host "  API healthy at $baseUrl"
+    $healthy = $false
+    $deadline = (Get-Date).AddSeconds(45)
+    while ((Get-Date) -lt $deadline) {
+      try {
+        $r = Invoke-RestMethod -Uri "$baseUrl/health" -TimeoutSec 2
+        if ($r.data.status -eq "ok") { $healthy = $true; break }
+      } catch { }
+      Start-Sleep -Milliseconds 700
+    }
+    if (-not $healthy) {
+      Write-Host "API output:" -ForegroundColor Yellow
+      Get-Content $logOut, $logErr -ErrorAction SilentlyContinue | Write-Host
+      throw "The API did not answer on $baseUrl/health. If it printed 'listening at https', comment out SSL_PFX_PATH in api/.env and try again."
+    }
+    Write-Host "  API healthy at $baseUrl"
 
-	Push-Location $repo
-	$newmanArgs = @(
-	  "newman", "run", $collection,
-	  "-e", $environment,
-	  "--env-var", "baseUrl=$baseUrl",
-	  "--env-var", "adminEmail=$AdminEmail",
-	  "--env-var", "adminPassword=$AdminPassword",
-	  "--insecure", "--color", "off",
-	  "--reporters", "cli,htmlextra",
-	  "--reporter-htmlextra-export", $htmlOut,
-	  "--reporter-htmlextra-title", "HustleHub+ Part 2 final run $i of $Runs"
-	)
-	# Windows PowerShell 5.1 turns any native stderr line into a terminating error when the
-	# preference is Stop, so relax it just for this call and judge the run by the exit code.
-	$previousPreference = $ErrorActionPreference
-	$ErrorActionPreference = "Continue"
-	$lines = & npx @newmanArgs 2>&1 | ForEach-Object { "$_" }
-	$code = $LASTEXITCODE
-	$ErrorActionPreference = $previousPreference
-	Pop-Location
+    Push-Location $repo
+    $newmanArgs = @(
+      "newman", "run", $collection,
+      "-e", $environment,
+      "--env-var", "baseUrl=$baseUrl",
+      "--env-var", "adminEmail=$AdminEmail",
+      "--env-var", "adminPassword=$AdminPassword",
+      "--insecure", "--color", "off",
+      "--reporters", "cli,htmlextra",
+      "--reporter-htmlextra-export", $htmlOut,
+      "--reporter-htmlextra-title", "HustleHub+ Part 2 final run $i of $Runs"
+    )
+    # Windows PowerShell 5.1 turns any native stderr line into a terminating error when the
+    # preference is Stop, so relax it just for this call and judge the run by the exit code.
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    # Newman draws its tables with Unicode box characters. Windows PowerShell decodes native output
+    # with the legacy console code page unless told otherwise, which garbles them (Gamma-o-e text).
+    $previousConsoleEncoding = $null
+    $previousPipeEncoding = $OutputEncoding
+    try {
+      $previousConsoleEncoding = [Console]::OutputEncoding
+      [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+      $OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+    } catch { }
+    $lines = & npx @newmanArgs 2>&1 | ForEach-Object { "$_" }
+    $code = $LASTEXITCODE
+    try {
+      if ($previousConsoleEncoding) { [Console]::OutputEncoding = $previousConsoleEncoding }
+      $OutputEncoding = $previousPipeEncoding
+    } catch { }
+    $ErrorActionPreference = $previousPreference
+    Pop-Location
 
-	$lines | ForEach-Object { Write-Host $_ }
-	[System.IO.File]::WriteAllLines($cliOut, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))
-	$results += [pscustomobject]@{ Run = $i; Database = $db; NewmanExitCode = $code }
+    $lines | ForEach-Object { Write-Host $_ }
+    [System.IO.File]::WriteAllLines($cliOut, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))
+    $results += [pscustomobject]@{ Run = $i; Database = $db; NewmanExitCode = $code }
   }
   catch {
-	Write-Host "Run $i failed: $($_.Exception.Message)" -ForegroundColor Red
-	$results += [pscustomobject]@{ Run = $i; Database = $db; NewmanExitCode = -1 }
+    Write-Host "Run $i failed: $($_.Exception.Message)" -ForegroundColor Red
+    $results += [pscustomobject]@{ Run = $i; Database = $db; NewmanExitCode = -1 }
   }
   finally {
-	Set-Location $repo
-	if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
-	Stop-ApiOnPort $Port
+    Set-Location $repo
+    if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+    Stop-ApiOnPort $Port
   }
 }
 
