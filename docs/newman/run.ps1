@@ -25,14 +25,16 @@ function Ensure-NewmanInstalled(){
 }
 
 function Run-Newman([string]$collectionPath, [string]$envPath, [string]$baseUrl, [string]$adminEmail, [string]$adminPassword){
-  $cliOut = Join-Path $PSScriptRoot '..\newman-cli-final.txt'
-  $htmlOut = Join-Path $PSScriptRoot '..\newman-report-final.html'
+	$cliOut = Join-Path $PSScriptRoot 'newman-cli-final.txt'
+  $htmlOut = Join-Path $PSScriptRoot 'newman-report-final.html'
 
-  $args = @('run', $collectionPath, '-e', $envPath, '--env-var', "baseUrl=$baseUrl", '--env-var', "adminEmail=$adminEmail", '--env-var', "adminPassword=$adminPassword", '--reporters', 'cli,htmlextra', '--reporter-htmlextra-export', $htmlOut, '--insecure', '--color', 'off')
+  $npArgs = @('newman', 'run', $collectionPath, '-e', $envPath, '--env-var', "baseUrl=$baseUrl", '--env-var', "adminEmail=$adminEmail", '--env-var', "adminPassword=$adminPassword", '--reporters', 'cli,htmlextra', '--reporter-htmlextra-export', $htmlOut, '--insecure', '--color', 'off')
 
-  Write-Host "Running newman with: npx newman $($args -join ' ')"
-  # Run and tee stdout to file (UTF8)
-  npx newman @($args) 2>&1 | Tee-Object -FilePath $cliOut -Encoding utf8
+  Write-Host "Running newman with: npx $($npArgs -join ' ')"
+  # Capture output, show it, and write UTF8 file
+  $out = & npx @npArgs 2>&1
+  if($out){ $out | ForEach-Object { Write-Host $_ } }
+  $out | Out-File -FilePath $cliOut -Encoding utf8
   $exit = $LASTEXITCODE
   Write-Host "Newman exit code: $exit"
   exit $exit
