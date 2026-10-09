@@ -1,1 +1,0 @@
-Vitest output will be saved here by Role 4 when tests are executed.

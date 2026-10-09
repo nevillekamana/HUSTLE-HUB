@@ -1,5 +1,0 @@
-This file should contain the CLI output from the final Newman run. Produce it by running:
-
-# pwsh ./docs/newman/run.ps1 -collection docs/postman/HustleHub.part2.postman_collection.json -environment docs/postman/HustleHub.local.postman_environment.json -baseUrl "https://localhost:5000/api" -adminEmail "admin@example.test" -adminPassword "Password1" > docs/newman/newman-cli-final.txt
-
-Replace with the real CLI output before committing.
