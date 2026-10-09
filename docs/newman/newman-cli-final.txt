@@ -1,0 +1,854 @@
+(node:23544) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+HustleHub+ API - Part 2 tests
+
+□ 1. Health
+└ GET /health - service up
+  GET http://localhost:5000/api/health [200 OK, 977B, 58ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  responds in under 2000 ms
+  √  reports status ok
+
+□ 2. Accounts and login
+└ POST /auth/register - Test Client (client)
+  POST http://localhost:5000/api/auth/register [201 Created, 1.09kB, 480ms]
+  √  status is 201
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns the safe user with the requested role
+
+└ POST /auth/register - Freelancer Alpha (freelancer)
+  POST http://localhost:5000/api/auth/register [201 Created, 1.1kB, 393ms]
+  √  status is 201
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns the safe user with the requested role
+
+└ POST /auth/register - Freelancer Bravo (freelancer)
+  POST http://localhost:5000/api/auth/register [201 Created, 1.1kB, 320ms]
+  √  status is 201
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns the safe user with the requested role
+
+└ POST /auth/register - Other Client (client)
+  POST http://localhost:5000/api/auth/register [201 Created, 1.1kB, 293ms]
+  √  status is 201
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns the safe user with the requested role
+
+└ POST /auth/login - client
+  POST http://localhost:5000/api/auth/login [200 OK, 1.27kB, 284ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns a JWT and the user
+
+└ POST /auth/login - freelancer A
+  POST http://localhost:5000/api/auth/login [200 OK, 1.29kB, 314ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns a JWT and the user
+
+└ POST /auth/login - freelancer B
+  POST http://localhost:5000/api/auth/login [200 OK, 1.29kB, 300ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns a JWT and the user
+
+└ POST /auth/login - other client
+  POST http://localhost:5000/api/auth/login [200 OK, 1.28kB, 358ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns a JWT and the user
+
+└ POST /auth/login - admin (credentials from the environment)
+  POST http://localhost:5000/api/auth/login [200 OK, 1.26kB, 355ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  admin token has the admin role
+
+└ POST /auth/register - duplicate email is refused
+  POST http://localhost:5000/api/auth/register [409 Conflict, 931B, 10ms]
+  √  status is 409
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /auth/register - missing fields
+  POST http://localhost:5000/api/auth/register [400 Bad Request, 1.02kB, 6ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+  √  names the missing fields
+
+└ POST /auth/register - invalid email format
+  POST http://localhost:5000/api/auth/register [400 Bad Request, 987B, 6ms]
+  √  status is 400
+  √  failure uses the shared envelope
+
+└ POST /auth/register - weak password
+  POST http://localhost:5000/api/auth/register [400 Bad Request, 997B, 8ms]
+  √  status is 400
+  √  failure uses the shared envelope
+
+└ POST /auth/register - admin role cannot be self-registered
+  POST http://localhost:5000/api/auth/register [400 Bad Request, 1.01kB, 7ms]
+  √  status is 400 or 403
+  √  failure uses the shared envelope
+  √  no account was created
+
+└ POST /auth/login - wrong password
+  POST http://localhost:5000/api/auth/login [401 Unauthorized, 931B, 453ms]
+  √  status is 401
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /auth/login - unknown email gives the same 401 message
+  POST http://localhost:5000/api/auth/login [401 Unauthorized, 931B, 9ms]
+  √  status is 401
+  √  failure uses the shared envelope
+  √  message does not reveal whether the email exists
+
+└ POST /auth/login - malformed JSON body
+  POST http://localhost:5000/api/auth/login [400 Bad Request, 945B, 27ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+□ 3. JWT on protected routes
+└ GET /auth/profile - valid token
+  GET http://localhost:5000/api/auth/profile [200 OK, 1.08kB, 13ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns the caller, not another account
+
+└ GET /auth/profile - missing token
+  GET http://localhost:5000/api/auth/profile [401 Unauthorized, 964B, 6ms]
+  √  status is 401
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /auth/profile - malformed token
+  GET http://localhost:5000/api/auth/profile [401 Unauthorized, 964B, 5ms]
+  √  status is 401
+  √  failure uses the shared envelope
+
+└ GET /gigs - no token
+  GET http://localhost:5000/api/gigs [401 Unauthorized, 964B, 5ms]
+  √  status is 401
+  √  failure uses the shared envelope
+
+└ GET /bookings/mine - no token
+  GET http://localhost:5000/api/bookings/mine [401 Unauthorized, 964B, 5ms]
+  √  status is 401
+  √  failure uses the shared envelope
+
+└ GET /income/me - no token
+  GET http://localhost:5000/api/income/me [401 Unauthorized, 964B, 4ms]
+  √  status is 401
+  √  failure uses the shared envelope
+
+└ POST /gigs - no token
+  POST http://localhost:5000/api/gigs [401 Unauthorized, 964B, 4ms]
+  √  status is 401
+  √  failure uses the shared envelope
+
+└ POST /bookings - no token
+  POST http://localhost:5000/api/bookings [401 Unauthorized, 964B, 5ms]
+  √  status is 401
+  √  failure uses the shared envelope
+
+└ GET /gigs - unsigned token (alg none) is refused
+  GET http://localhost:5000/api/gigs [401 Unauthorized, 964B, 4ms]
+  √  status is 401
+  √  failure uses the shared envelope
+
+└ GET /admin/users - token signed with the wrong secret is refused
+  GET http://localhost:5000/api/admin/users [401 Unauthorized, 964B, 5ms]
+  √  status is 401
+  √  failure uses the shared envelope
+
+□ 4. RBAC denials
+└ POST /gigs - client cannot create a gig (403)
+  POST http://localhost:5000/api/gigs [403 Forbidden, 959B, 6ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /gigs - admin cannot create a gig (403)
+  POST http://localhost:5000/api/gigs [403 Forbidden, 959B, 9ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /gigs/mine - client has no own gigs (403)
+  GET http://localhost:5000/api/gigs/mine [403 Forbidden, 959B, 4ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ PUT /gigs/:id - client cannot update (403)
+  PUT http://localhost:5000/api/gigs/507f1f77bcf86cd799439011 [403 Forbidden, 959B, 5ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ DELETE /gigs/:id - client cannot delete (403)
+  DELETE http://localhost:5000/api/gigs/507f1f77bcf86cd799439011 [403 Forbidden, 959B, 4ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /bookings - freelancer cannot book (403)
+  POST http://localhost:5000/api/bookings [403 Forbidden, 959B, 5ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /bookings - admin cannot book (403)
+  POST http://localhost:5000/api/bookings [403 Forbidden, 959B, 6ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /income/me - client has no income (403)
+  GET http://localhost:5000/api/income/me [403 Forbidden, 959B, 6ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /income/me - admin has no income (403)
+  GET http://localhost:5000/api/income/me [403 Forbidden, 959B, 5ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /transactions - client cannot list all (403)
+  GET http://localhost:5000/api/transactions [403 Forbidden, 959B, 5ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /transactions - freelancer cannot list all (403)
+  GET http://localhost:5000/api/transactions [403 Forbidden, 959B, 5ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /admin/users - client (403)
+  GET http://localhost:5000/api/admin/users [403 Forbidden, 959B, 4ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /admin/users - freelancer (403)
+  GET http://localhost:5000/api/admin/users [403 Forbidden, 959B, 4ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /admin/anything - non-admin (403)
+  GET http://localhost:5000/api/admin/settings [403 Forbidden, 959B, 5ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /auth/admin - non-admin (403)
+  GET http://localhost:5000/api/auth/admin [403 Forbidden, 959B, 5ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /gigs - role check ignores upper case and trailing slash
+  POST http://localhost:5000/api/GIGS [403 Forbidden, 959B, 19ms]
+  √  status is 403
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+□ 5. Validation and malicious input
+└ POST /gigs - missing every field (400)
+  POST http://localhost:5000/api/gigs [400 Bad Request, 1.11kB, 7ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+  √  lists field level errors
+
+└ POST /gigs - price below the minimum (400)
+  POST http://localhost:5000/api/gigs [400 Bad Request, 997B, 26ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /gigs - price is a string (400)
+  POST http://localhost:5000/api/gigs [400 Bad Request, 995B, 7ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /gigs - unknown category (400)
+  POST http://localhost:5000/api/gigs [400 Bad Request, 1.03kB, 6ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /gigs - caller tries to set the owner (400)
+  POST http://localhost:5000/api/gigs [400 Bad Request, 988B, 4ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /gigs - NoSQL operator in a field (400)
+  POST http://localhost:5000/api/gigs [400 Bad Request, 1.03kB, 4ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ PUT /gigs/:id - malformed id (400)
+  PUT http://localhost:5000/api/gigs/123 [400 Bad Request, 974B, 6ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ DELETE /gigs/:id - malformed id (400)
+  DELETE http://localhost:5000/api/gigs/not-an-object-id [400 Bad Request, 974B, 4ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /gigs/:id - malformed id (400)
+  GET http://localhost:5000/api/gigs/%24ne [400 Bad Request, 974B, 4ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /bookings - missing gigId (400)
+  POST http://localhost:5000/api/bookings [400 Bad Request, 966B, 5ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /bookings - malformed gigId (400)
+  POST http://localhost:5000/api/bookings [400 Bad Request, 973B, 4ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /bookings - caller tries to set the price (400)
+  POST http://localhost:5000/api/bookings [400 Bad Request, 979B, 3ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /bookings - caller tries to set the freelancer (400)
+  POST http://localhost:5000/api/bookings [400 Bad Request, 984B, 3ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /bookings - NoSQL operator as gigId (400)
+  POST http://localhost:5000/api/bookings [400 Bad Request, 1.03kB, 23ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /gigs - NoSQL operator in the query string (400)
+  GET http://localhost:5000/api/gigs?category[$ne]=design [400 Bad Request, 992B, 5ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /gigs - limit above the maximum (400)
+  GET http://localhost:5000/api/gigs?limit=100000 [400 Bad Request, 999B, 4ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /transactions - bad page number is refused (400)
+  GET http://localhost:5000/api/transactions?page=-1 [400 Bad Request, 1kB, 3ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /auth/login - NoSQL operators instead of strings (400)
+  POST http://localhost:5000/api/auth/login [400 Bad Request, 1.03kB, 21ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+  √  no token was issued
+
+└ POST /auth/register - $where key is refused (400)
+  POST http://localhost:5000/api/auth/register [400 Bad Request, 1.03kB, 4ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ POST /auth/register - script tag in the name is not accepted
+  POST http://localhost:5000/api/auth/register [400 Bad Request, 972B, 5ms]
+  √  status is 400
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+  √  the script is not echoed back
+
+└ GET /gigs - script in the search term is not echoed
+  GET http://localhost:5000/api/gigs?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E [200 OK, 952B, 19ms]
+  √  does not crash
+  √  the script is not echoed back
+  √  response leaks no internals or password hash
+
+□ 6. Gigs
+└ POST /gigs - freelancer A creates a gig
+  POST http://localhost:5000/api/gigs [201 Created, 1.25kB, 26ms]
+  √  status is 201
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  returns the gig with the submitted values
+  √  owner comes from the token
+
+└ POST /gigs - markup is stripped from stored text
+  POST http://localhost:5000/api/gigs [201 Created, 1.25kB, 13ms]
+  √  status is 201
+  √  response leaks no internals or password hash
+  √  stored title has no markup
+
+└ GET /gigs - client browses gigs
+  GET http://localhost:5000/api/gigs [200 OK, 1.6kB, 18ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  contains the new gig
+  √  is paged
+
+└ GET /gigs?limit=1 - paging is honoured
+  GET http://localhost:5000/api/gigs?limit=1 [200 OK, 1.28kB, 14ms]
+  √  status is 200
+  √  returns at most one gig
+
+└ GET /gigs?category=design - filter works
+  GET http://localhost:5000/api/gigs?category=design [200 OK, 1.6kB, 15ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  every gig is in the category
+
+└ GET /gigs?category=writing - filter excludes other categories
+  GET http://localhost:5000/api/gigs?category=writing [200 OK, 952B, 15ms]
+  √  status is 200
+  √  the design gig is not listed
+
+└ GET /gigs/:id - gig detail
+  GET http://localhost:5000/api/gigs/6ac954de7927aff56e715b96 [200 OK, 1.24kB, 14ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  is the requested gig
+
+└ GET /gigs/mine - freelancer A sees own gig
+  GET http://localhost:5000/api/gigs/mine [200 OK, 1.57kB, 14ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  lists own gigs only
+
+└ GET /gigs/mine - freelancer B does not see A's gig
+  GET http://localhost:5000/api/gigs/mine [200 OK, 922B, 8ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  the other freelancer gig is absent
+
+└ PUT /gigs/:id - owner updates own gig
+  PUT http://localhost:5000/api/gigs/6ac954de7927aff56e715b96 [200 OK, 1.24kB, 21ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  title changed, price untouched
+
+└ PUT /gigs/:id - freelancer B cannot edit A's gig (404)
+  PUT http://localhost:5000/api/gigs/6ac954de7927aff56e715b96 [404 Not Found, 922B, 10ms]
+  √  status is 404
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ DELETE /gigs/:id - freelancer B cannot delete A's gig (404)
+  DELETE http://localhost:5000/api/gigs/6ac954de7927aff56e715b96 [404 Not Found, 922B, 9ms]
+  √  status is 404
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /gigs/:id - gig is unchanged after the attempts
+  GET http://localhost:5000/api/gigs/6ac954de7927aff56e715b96 [200 OK, 1.25kB, 12ms]
+  √  status is 200
+  √  still titled and owned by A
+
+└ GET /gigs/:id - unknown id gives 404
+  GET http://localhost:5000/api/gigs/507f1f77bcf86cd799439011 [404 Not Found, 922B, 9ms]
+  √  status is 404
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+□ 7. Bookings, transactions and income
+└ POST /bookings - client books the gig
+  POST http://localhost:5000/api/bookings [201 Created, 1.5kB, 21ms]
+  √  status is 201
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  booking price is the stored gig price, owner is the gig owner
+  √  a transaction is created with the booking, linked to both users
+  √  the simulated payment has a reference
+
+└ POST /bookings - booking a gig that does not exist (404)
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 9ms]
+  √  status is 404
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /bookings/mine - client sees the booking
+  GET http://localhost:5000/api/bookings/mine [200 OK, 1.3kB, 15ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  includes the booking
+
+└ GET /bookings/mine - freelancer A sees the booking on their gig
+  GET http://localhost:5000/api/bookings/mine [200 OK, 1.3kB, 16ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  includes the booking
+
+└ GET /bookings/mine - freelancer B sees nothing of A's
+  GET http://localhost:5000/api/bookings/mine [200 OK, 930B, 8ms]
+  √  status is 200
+  √  booking is absent
+
+└ GET /bookings/mine - another client does not see it
+  GET http://localhost:5000/api/bookings/mine [200 OK, 930B, 8ms]
+  √  status is 200
+  √  booking is absent
+
+└ GET /bookings/:id - participant can read it
+  GET http://localhost:5000/api/bookings/6ac954df7927aff56e715b98 [200 OK, 1.3kB, 16ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  is the booking
+
+└ GET /bookings/:id - the freelancer on it can read it
+  GET http://localhost:5000/api/bookings/6ac954df7927aff56e715b98 [200 OK, 1.3kB, 14ms]
+  √  status is 200
+  √  success uses the shared envelope
+
+└ GET /bookings/:id - another client cannot read it (404)
+  GET http://localhost:5000/api/bookings/6ac954df7927aff56e715b98 [404 Not Found, 926B, 9ms]
+  √  status is 404
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /bookings/:id - another freelancer cannot read it (404)
+  GET http://localhost:5000/api/bookings/6ac954df7927aff56e715b98 [404 Not Found, 926B, 8ms]
+  √  status is 404
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /transactions/mine - client has a transaction for the booking
+  GET http://localhost:5000/api/transactions/mine [200 OK, 1.37kB, 17ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  the transaction is listed
+  √  it links the booking, the client and the freelancer
+
+└ GET /transactions/mine - freelancer A sees the same transaction
+  GET http://localhost:5000/api/transactions/mine [200 OK, 1.37kB, 20ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  the transaction is listed
+
+└ GET /transactions/mine - freelancer B sees none of it
+  GET http://localhost:5000/api/transactions/mine [200 OK, 938B, 9ms]
+  √  status is 200
+  √  the transaction is absent
+
+└ GET /transactions/mine - another client sees none of it
+  GET http://localhost:5000/api/transactions/mine [200 OK, 938B, 9ms]
+  √  status is 200
+  √  the transaction is absent
+
+└ GET /income/me - freelancer A income reflects the booking
+  GET http://localhost:5000/api/income/me [200 OK, 1.15kB, 13ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  total is the sum of completed transactions
+  √  breakdown by gig and by month is present
+
+└ GET /income/me - freelancer B has no income
+  GET http://localhost:5000/api/income/me [200 OK, 1kB, 10ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  nothing from the other freelancer booking
+
+└ GET /transactions - admin lists all transactions
+  GET http://localhost:5000/api/transactions [200 OK, 1.4kB, 16ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  includes the transaction
+
+└ GET /admin/users - admin lists users without hashes
+  GET http://localhost:5000/api/admin/users [200 OK, 1.74kB, 13ms]
+  √  status is 200
+  √  success uses the shared envelope
+  √  response leaks no internals or password hash
+  √  lists users and exposes no secrets
+
+└ DELETE /gigs/:id - owner deletes own gig
+  DELETE http://localhost:5000/api/gigs/6ac954de7927aff56e715b96 [200 OK, 1.25kB, 13ms]
+  √  status is 200
+  √  response leaks no internals or password hash
+  √  gig is deactivated, not erased
+
+└ GET /gigs/:id - deleted gig is no longer served
+  GET http://localhost:5000/api/gigs/6ac954de7927aff56e715b96 [404 Not Found, 922B, 8ms]
+  √  status is 404
+  √  failure uses the shared envelope
+
+└ GET /gigs - deleted gig is gone from browse
+  GET http://localhost:5000/api/gigs [200 OK, 1.28kB, 13ms]
+  √  status is 200
+  √  not listed
+
+└ POST /bookings - a deleted gig cannot be booked (404)
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 11ms]
+  √  status is 404
+  √  failure uses the shared envelope
+  √  response leaks no internals or password hash
+
+└ GET /bookings/:id - booking survives the gig being deleted
+  GET http://localhost:5000/api/bookings/6ac954df7927aff56e715b98 [200 OK, 1.3kB, 15ms]
+  √  status is 200
+  √  success uses the shared envelope
+
+└ GET /income/me - income survives the gig being deleted
+  GET http://localhost:5000/api/income/me [200 OK, 1.15kB, 10ms]
+  √  status is 200
+  √  total unchanged
+
+□ 8. Rate limiting  [run last]
+└ POST /auth/login - repeated failures end in 429
+  POST http://localhost:5000/api/auth/login [401 Unauthorized, 931B, 8ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /auth/login - repeated failures end in 429
+
+└ POST /auth/login - repeated failures end in 429
+  POST http://localhost:5000/api/auth/login [401 Unauthorized, 931B, 8ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /auth/login - repeated failures end in 429
+
+└ POST /auth/login - repeated failures end in 429
+  POST http://localhost:5000/api/auth/login [401 Unauthorized, 931B, 11ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /auth/login - repeated failures end in 429
+
+└ POST /auth/login - repeated failures end in 429
+  POST http://localhost:5000/api/auth/login [429 Too Many Requests, 1.08kB, 5ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /auth/login - repeated failures end in 429
+
+└ POST /auth/login - repeated failures end in 429
+  POST http://localhost:5000/api/auth/login [429 Too Many Requests, 1.08kB, 7ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /auth/login - repeated failures end in 429
+
+└ POST /auth/login - repeated failures end in 429
+  POST http://localhost:5000/api/auth/login [429 Too Many Requests, 1.08kB, 5ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /auth/login - repeated failures end in 429
+
+└ POST /auth/login - repeated failures end in 429
+  POST http://localhost:5000/api/auth/login [429 Too Many Requests, 1.08kB, 5ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /auth/login - repeated failures end in 429
+
+└ POST /auth/login - repeated failures end in 429
+  POST http://localhost:5000/api/auth/login [429 Too Many Requests, 1.08kB, 4ms]
+  √  status is 429
+  √  failure uses the shared envelope
+  √  Retry-After header is present and numeric
+  √  RateLimit headers tell the client where it stands
+  √  error names the limit that was hit
+  √  message says what was limited
+  √  response leaks no internals or password hash
+
+└ POST /auth/login - a correct password still reaches the limiter, not the route
+  POST http://localhost:5000/api/auth/login [429 Too Many Requests, 1.08kB, 4ms]
+  √  status is 429
+  √  blocked address gets Retry-After
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 8ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 8ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 8ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 9ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 10ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 9ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 8ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 9ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 9ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [429 Too Many Requests, 1.09kB, 5ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [429 Too Many Requests, 1.09kB, 5ms]
+  ┌
+  │ 'Using "postman.setNextRequest" is deprecated. Use "pm
+  │ .execution.setNextRequest()" instead.'
+  └
+
+Attempting to set next request to POST /bookings - flood from one client ends in 429
+
+└ POST /bookings - flood from one client ends in 429
+  POST http://localhost:5000/api/bookings [429 Too Many Requests, 1.09kB, 7ms]
+  √  status is 429
+  √  failure uses the shared envelope
+  √  Retry-After header is present and numeric
+  √  RateLimit headers tell the client where it stands
+  √  error names the limit that was hit
+  √  message says what was limited
+  √  response leaks no internals or password hash
+
+└ POST /bookings - a different client is not blocked by that flood
+  POST http://localhost:5000/api/bookings [404 Not Found, 918B, 12ms]
+  √  not rate limited (limit is per user)
+
+└ GET /gigs - ordinary reads are unaffected by the booking limit
+  GET http://localhost:5000/api/gigs [200 OK, 1.28kB, 13ms]
+  √  not rate limited
+
+┌─────────────────────────┬───────────────────┬──────────────────┐
+│                         │          executed │           failed │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              iterations │                 1 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│                requests │               126 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│            test-scripts │               126 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│      prerequest-scripts │                 1 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              assertions │               335 │                0 │
+├─────────────────────────┴───────────────────┴──────────────────┤
+│ total run duration: 15.7s                                      │
+├────────────────────────────────────────────────────────────────┤
+│ total data received: 24.08kB (approx)                          │
+├────────────────────────────────────────────────────────────────┤
+│ average response time: 37ms [min: 3ms, max: 480ms, s.d.: 95ms] │
+└────────────────────────────────────────────────────────────────┘
