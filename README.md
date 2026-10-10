@@ -1,434 +1,402 @@
 # HustleHub+
 
-A secure freelance marketplace platform that allows freelancers to advertise
-services and clients to browse and book those services. The system will
-record the financial transactions generated through bookings and give
-freelancers an indication of income earned and estimated tax obligations.
+A secure freelance marketplace. Freelancers list services ("gigs"), clients browse and book them, and every booking creates a transaction record that feeds the freelancer's income summary. It is a MERN application (MongoDB, Express, React, Node.js) built with security as a primary requirement rather than something added afterwards.
 
-This document covers **Part 1 — Secure Foundations**: the backend API,
-authentication, and the security decisions behind it. Marketplace features
-(gigs, bookings, transactions, tax estimation), the React frontend, and
-DevSecOps work are out of scope for this part and will be documented as they
-are built in Parts 2 and 3.
+This README covers two parts of the project:
+
+- **Part 1, Secure Foundations:** the Express API, registration, login, password hashing, JWT, HTTPS, input validation and safe errors.
+- **Part 2, Secure Stack:** MongoDB, gigs, bookings, transactions, freelancer income, role-based access control, the React client, input sanitisation, rate limiting, security headers with a Content Security Policy, and automated backend and frontend tests.
+
+Part 3 (tax estimation, the income dashboard, CI/CD, Docker and logging) is planned and is not part of this version.
 
 ---
 
 ## Table of Contents
 
+- [What is new in Part 2](#what-is-new-in-part-2)
 - [Overview](#overview)
 - [Intended Users](#intended-users)
 - [System Architecture](#system-architecture)
-- [Backend Structure](#backend-structure)
+- [Repository Structure](#repository-structure)
+- [How a Request Is Handled](#how-a-request-is-handled)
+- [Data Model](#data-model)
+- [Marketplace Flow](#marketplace-flow)
 - [Registration and Login](#registration-and-login)
-- [Security Decisions](#security-decisions)
+- [Security Measures](#security-measures)
+- [The React Client](#the-react-client)
 - [Getting Started](#getting-started)
 - [API Endpoints](#api-endpoints)
 - [Testing](#testing)
+- [Screenshots](#screenshots)
 - [Demonstration](#demonstration)
+- [Known Limitations](#known-limitations)
 - [Team](#team)
 
 ---
 
+## What is new in Part 2
+
+| Area | Part 1 | Part 2 |
+|---|---|---|
+| Storage | Locked JSON file | MongoDB with Mongoose |
+| Marketplace | None | Gigs, bookings, simulated payment, transactions, freelancer income |
+| Access control | One admin-only demonstration route | Role-based access control on every route, plus ownership checks |
+| Admin accounts | Could not be created | Created with `npm run seed:admin`; registration still refuses the admin role |
+| Input safety | Whitelist validation | Validation on every route, NoSQL injection and XSS sanitisation |
+| Abuse protection | Failed-login limit | Limits on the whole API, failed logins, registrations and bookings |
+| Browser protection | None | Helmet security headers with a strict Content Security Policy |
+| Client | None | React application with role-aware navigation |
+| Testing | Postman collection | Security check script, Postman collection run with Newman, frontend tests |
+
 ## Overview
 
-HustleHub+ is a freelance marketplace: freelancers advertise services
-("gigs"), and clients browse and book them. Because the platform will go on
-to handle account credentials, booking records, and income and tax data, Part
-1 treats security as a foundation rather than something bolted on afterward —
-the backend built here is a small, self-contained authentication API that
-Parts 2 and 3 extend rather than rework.
+Freelancers advertise services ("gigs") and clients browse and book them. Payment is simulated: a booking returns a confirmation and a payment reference, and always creates a transaction record linked to both the client and the freelancer. A freelancer's income is calculated from their completed transactions.
+
+The platform holds account credentials, booking records and income data, so every route is protected from the moment it is added. A request must carry a valid token, pass its role check and its input checks, and, where it touches a user's own data, pass an ownership check, before any business logic runs.
 
 ## Intended Users
 
-The platform is designed around three roles. Part 1 implements the first two;
-`admin` is a reserved role that exists in the data model but can't yet be
-reached, since the marketplace features it would administer haven't been
-built.
-
-| Role | Description | Status in Part 1 |
+| Role | What they can do | How the account is created |
 |---|---|---|
-| **Client** | Books gigs from freelancers. Default role on registration. | Can register and log in |
-| **Freelancer** | Advertises gigs and tracks income from bookings. | Can register and log in |
-| **Admin** | Platform oversight (Part 2+). | Reserved role; not self-assignable, no admin account can currently be created |
+| **Client** | Browse gigs, book a gig, view their own bookings and transactions | Register |
+| **Freelancer** | Create, update and delete their own gigs, view bookings on their gigs, view their own transactions and income | Register |
+| **Admin** | View all users and all transactions, remove any gig | `npm run seed:admin` only. Registration refuses the admin role whatever the request says |
 
 ## System Architecture
 
-The diagram below shows the MERN architecture as it stands at the end of
-Part 1: a client sends a request over HTTPS into the Express backend, which
-routes it through a request pipeline before anything touches storage. The
-"M" and the "F" of MERN are placeholders for now — user data lives in a
-locked JSON file rather than MongoDB, and there is no client yet — both are
-scheduled Part 2 work, not gaps in what Part 1 was meant to deliver.
+A request travels from the React client into the Express API, through a fixed pipeline of security steps, then to the routes, services and Mongoose models, and finally to MongoDB. Anything that goes wrong on the way leaves through one central error handler that returns a safe message.
 
-![MERN architecture diagram](https://github.com/EMWCCN/insy7314-2026-g2-insy7314-2026-hustlehub-plus-part1-st10434131/blob/288e9414a5cc4b3386875413e84a8f6755affd51/MERN%20DIAGRAM.png)
+```mermaid
+flowchart TD
+    Browser["React client (Vite dev server)"]
+    subgraph API["HustleHub+ API process (Node.js and Express)"]
+        direction TB
+        H["Helmet security headers and CSP"]
+        RL["API rate limiter, 300 per minute per IP"]
+        BP["JSON body parser, 10 kb limit"]
+        SAN["Sanitisation: NoSQL operators and XSS"]
+        JWT["JWT check on every route except health, register and login"]
+        POL["Route policy: role, id and field validation, login and booking limits"]
+        RT["Routes and controllers with ownership checks using the token id"]
+        SVC["Services: passwords, tokens, bookings, simulated payment, income"]
+        MOD["Mongoose models: User, Gig, Booking, Transaction"]
+        EH["Central error handler"]
+        H --> RL --> BP --> SAN --> JWT --> POL --> RT --> SVC --> MOD
+        RT -.->|"on error"| EH
+    end
+    DB[("MongoDB")]
+    Browser -->|"HTTPS requests to /api"| H
+    MOD --> DB
+    EH -.->|"safe JSON error"| Browser
+```
 
-**System boundary.** Everything inside the outer box is the API process; the
-client and the eventual MongoDB deployment sit outside it. The only way in is
-through the request pipeline — there's no code path that reaches the domain
-logic or the store without first passing validation and, on protected
-routes, JWT verification.
+**System boundary.** Everything inside the box is the API process. The browser and MongoDB sit outside it. The only way in is the pipeline: no code path reaches a route, a service or the database without first passing the security steps, and the error handler never returns anything derived from the error itself (no stack traces, file paths or database messages).
 
-## Backend Structure
+## Repository Structure
 
-The backend is a Node.js and Express API with no database yet: users live in
-a JSON file behind a small datastore module, which keeps Part 1
-self-contained while leaving an obvious seam to swap in MongoDB later. Every
-request follows the same path in, and every response leaves through the same
-pair of senders, so the API answers in one shape no matter which endpoint was
-hit.
+```text
+api/
+  config/        env.js, db.js, security.js, accessPolicy.js, routePolicy.js
+  controllers/   auth, gig, booking, transaction, income, admin
+  middleware/    securityHeaders, rateLimit, sanitize, apiGuard, requireAuth,
+                 routeGuard, resourceValidation, validation, role, notFound, errorHandler
+  models/        user, gig, booking, transaction
+  routes/        index, auth, gig, booking, transaction, income, admin
+  scripts/       securityCheck.js, seedAdmin.js, seedDemo.js
+  services/      password, token, booking, payment, income
+  utils/         apiResponse.js, httpStatus.js
+client/
+  src/           pages, components, auth, api, hooks, utils, test
+docs/
+  security.md, testing.md, postman-guide.md
+  postman/       collection and environment
+  newman/        Newman evidence and the run script
+  frontend-tests/ Vitest output
+  screenshots/   Part 1 and Part 2 screenshots
+  diagrams/      Part 1 architecture and authentication diagrams
+```
 
-| Folder | Holds | Rule it follows |
+`app.js` builds the Express application and exports it without starting a listener. `server.js` starts it over HTTPS when a certificate is present and over HTTP otherwise. Every response uses the same envelope:
+
+```json
+{ "success": true,  "message": "gig created", "data": { } }
+{ "success": false, "message": "validation failed", "errors": [ { "field": "title", "message": "must be between 3 and 100 characters" } ] }
+```
+
+## How a Request Is Handled
+
+Requests pass these steps in this order (`api/app.js`). A request that fails a step is answered there and goes no further.
+
+| # | Step | Refuses with |
 |---|---|---|
-| `config/` | `env.js` | The only file in the API that reads `process.env` |
-| `routes/` | `index.js`, `authRoutes.js` | Declares paths, never logic |
-| `controllers/` | `authController.js` | Handles a request, delegates the work |
-| `models/` | `userModel.js` | Owns the shape of a user and how one is found or made |
-| `store/` | `jsonStore.js` | Reads and writes the JSON files, with a lock |
-| `services/` | `passwordService.js`, `tokenService.js` | Hashing and tokens |
-| `middleware/` | `validationMiddleware.js`, `requireAuth.js`, `roleMiddleware.js`, `rateLimitMiddleware.js`, `notFound.js`, `errorHandler.js` | Runs before or after a handler |
-| `utils/` | `apiResponse.js`, `httpStatus.js` | The response envelope and status codes |
+| 1 | Security headers (Helmet and CSP) | |
+| 2 | Rate limit for the whole API | 429 |
+| 3 | JSON body parser, 10 kb limit | 400, 413 |
+| 4 | Sanitisation (NoSQL injection, XSS) | 400 |
+| 5 | JWT check on every route that is not public | 401 |
+| 6 | Route policy: role check, id check, field validation, login and booking limits | 403, 400, 429 |
+| 7 | The route itself, which adds the ownership check | 403, 404 |
+| 8 | Not found handler and central error handler | 404, 500 with a fixed message |
 
-`app.js` builds the Express application and exports it without starting a
-listener. `server.js` starts it, choosing HTTPS or HTTP depending on whether
-a certificate is present (see [HTTPS](#https)). Splitting the two means the
-same app object can be wrapped in an HTTPS server, or imported directly by a
-test runner in Part 2, without touching `app.js`.
+Public routes are only `GET /api/health`, `POST /api/auth/register` and `POST /api/auth/login`. A new route is protected the moment it is added.
 
-**Request lifecycle:**
+## Data Model
 
-```
-request
-  -> express.json({ limit: '10kb' })     body parsed, oversized bodies refused
-  -> app.use('/api', routes)             the router index
-       -> /health                        liveness probe
-       -> /auth  -> authRoutes           register, login, profile, admin
-            -> loginRateLimiter          login only, failed attempts capped
-            -> validation                format and strength rules, 400 on failure
-            -> requireAuth               protected routes only
-            -> authorizeRoles            role restricted routes only
-            -> controller                delegates and responds
-  -> notFound                            nothing matched, 404
-  -> errorHandler                        anything that threw, controlled reply
-```
+| Model | Main fields |
+|---|---|
+| **User** | full name, email (unique, lower case), password hash (never returned), role: client, freelancer or admin |
+| **Gig** | freelancer (owner), title, description, category, `priceCents`, `isActive` |
+| **Booking** | gig, client, freelancer (copied from the gig's owner), `priceCents` (the gig's price at booking time), status: confirmed or cancelled |
+| **Transaction** | booking (unique), client, freelancer, `amountCents`, currency (ZAR), status: completed, simulated payment reference |
 
-The order matters: `notFound` is mounted second-last and `errorHandler` last,
-so a route registered below either of them would simply never run.
+Money is stored as whole numbers of cents so amounts never drift through rounding. Deleting a gig deactivates it (`isActive: false`): it disappears from browsing and can no longer be booked, but its bookings, transactions and the freelancer's income are kept.
 
-**Response envelope.** Every response takes one of two shapes. Success
-bodies carry `data` and never `errors`; failure bodies carry `errors` and
-never `data`.
+## Marketplace Flow
 
-```json
-{ "success": true,  "message": "user registered successfully", "data": { } }
-{ "success": false, "message": "email already registered",     "errors": [ ] }
-```
-
-Field-level validation detail goes in `errors`:
-
-```json
-{
-  "success": false,
-  "message": "validation failed",
-  "errors": [
-    { "field": "email", "message": "must be a valid email address" },
-    { "field": "password", "message": "must be between 8 and 128 characters" }
-  ]
-}
-```
+1. **A freelancer creates a gig.** The owner is taken from the verified token, never from the request body, and any attempt to send an owner is refused.
+2. **A client browses gigs.** The list is paged and can be filtered by category, search text and price range.
+3. **A client books a gig** with `POST /api/bookings` and only a `gigId`. The price and the freelancer come from the stored gig, so a client cannot choose either. A simulated payment returns a reference, then a booking and a transaction are created together. With a replica set (Atlas, or a local instance started with one) this is a real MongoDB transaction. On a standalone local instance a compensating delete removes the booking if the transaction record fails to write.
+4. **Both parties see the booking.** A client sees the bookings they made. A freelancer sees bookings on their gigs. Anyone else gets a 404, which does not reveal that the booking exists.
+5. **Income is calculated, not stored.** `GET /api/income/me` aggregates the freelancer's completed transactions into a total, a transaction count, and breakdowns by gig and by month, so the figure can never drift out of step with the transactions.
 
 ## Registration and Login
 
-### Registration flow
+![Authentication flow](docs/diagrams/auth-flow-diagram.png)
 
-1. The client sends `POST /api/auth/register` with `fullName`, `email`,
-   `password`, and an optional `role`, over HTTPS.
-2. `express.json` parses the body, rejecting anything over 10kb before it's
-   even buffered.
-3. `validateRegister` checks every field before reporting anything, so one
-   reply lists everything wrong with the request instead of one fault at a
-   time: full name (2–100 characters, letters/spaces/hyphens/apostrophes
-   only), email (valid format, ≤254 characters), password (8–128
-   characters, at least one letter and one digit), and role (if present,
-   must be a string).
-4. The controller resolves the requested role — `client` or `freelancer`
-   only. `admin` is a real stored role, but it's deliberately left off the
-   self-assignable list, so no request body can produce one.
-5. The controller checks the email against existing users first, so an
-   obvious duplicate doesn't pay for a bcrypt run, and returns
-   `409 Conflict` if it's already registered.
-6. The password is hashed with bcrypt (work factor from config, minimum
-   10). It travels no further than the controller — only the hash reaches
-   the model.
-7. The user model builds the record and writes it through the JSON store,
-   whose duplicate check re-runs **inside the same file lock** as the
-   insert, closing the race window left open between steps 5 and 7.
-8. The response returns `201 Created` with the safe user object — never the
-   password hash.
+*The authentication flow is unchanged from Part 1.*
 
-### Login flow
+**Registration** (`POST /api/auth/register`): the body is size-limited, sanitised and validated (full name, email, password of 8 to 128 characters with at least one letter and one digit, and a role of `client` or `freelancer`). A duplicate email returns 409. The password is hashed with bcrypt before it reaches the model, and the response returns the safe user object without the hash.
 
-1. The client sends `POST /api/auth/login` with `email` and `password`.
-2. A per-client rate limiter allows 5 failed attempts per minute before
-   replying `429 Too Many Requests`. Successful logins don't count against
-   that limit, so a legitimate user can never be locked out of their own
-   account.
-3. `validateLogin` checks only that both fields are present — deliberately
-   looser than registration (see [Input Validation](#input-validation)).
-4. The controller looks up the user by email and compares the supplied
-   password against the stored hash with bcrypt. An unknown email and a
-   wrong password return the **same** `401 Unauthorized` with the same
-   message, so the reply itself can't be used to work out which addresses
-   are registered.
-5. On a match, `tokenService.generateToken({ id, role })` issues a JWT
-   signed with the server's secret, expiring after the configured lifetime
-   (default 1 hour).
-6. The response returns `200 OK` with the safe user object and the token.
-7. The client sends that token on every later request as
-   `Authorization: Bearer <token>`.
-8. `requireAuth` extracts and verifies the token on every protected route.
-   A missing, malformed, expired, or forged token all produce the same
-   `401 Unauthorized` — the middleware never gives away which case it was.
-   On success, the verified `id` and `role` are attached to `req.auth` for
-   whatever handler runs next.
-9. `authorizeRoles(...)` (used on `/api/auth/admin`) runs after
-   `requireAuth` and checks `req.auth.role` against an allow-list, replying
-   `403 Forbidden` for a caller who is authenticated but not permitted.
+**Login** (`POST /api/auth/login`): a failed-login rate limit applies, then the password is compared with the stored hash. An unknown email and a wrong password return the identical 401 and message, so the reply cannot be used to find out which addresses are registered. On success a JWT carrying only `{ id, role }` is returned. The client sends it on every later request as `Authorization: Bearer <token>`.
 
-## Security Decisions
+## Security Measures
 
-Each decision below is a trade-off, not a feature checklist — what follows
-is the reasoning behind what the code actually does, checked by reading it
-and by running the API locally.
+The full write-up, with every limit and rule, is in [docs/security.md](docs/security.md). In summary:
 
-### Password Hashing
+| Control | What it does |
+|---|---|
+| **Password hashing** | bcrypt (`bcryptjs`) with a work factor of 12, raised to a minimum of 10. Plain-text passwords are never stored: the user model's builder accepts a hash and has no parameter for a plain password. Responses use an allowlist serialiser, so a new field is private by default |
+| **JWT** | HS256 tokens signed with `JWT_SECRET`, one hour by default. The payload is only `{ id, role }`. Missing, expired, forged, unsigned (`alg: none`) and malformed tokens all receive the same 401. Only the verified `id` and `role` are trusted |
+| **Role-based access control** | One row per protected address in `config/routePolicy.js`, enforced in a single place, so a route cannot be added without a role check |
+| **Ownership checks** | A freelancer can only change their own gigs, and a user only sees their own bookings and transactions. Routes check this against the database using the token's id. Resources a user does not own answer 404 |
+| **Input validation** | Whitelist rules on every field. A field that is not in the rules is refused, so a caller cannot send a gig's owner or a booking's price. Malformed ids return 400, not a crash |
+| **Sanitisation** | Keys starting with `$`, containing `.`, or named `__proto__`, `constructor` or `prototype` are refused with 400 (NoSQL injection). HTML tags are stripped from all text and the content of script and style tags is dropped (XSS) |
+| **Rate limiting** | 300 requests per minute per IP for the API, 5 failed logins per minute per IP, 30 registrations per 15 minutes per IP, and 10 bookings per minute per signed-in user. A blocked request returns 429 with a `Retry-After` header and a message saying which limit was hit |
+| **Security headers** | Helmet with a strict Content Security Policy: `default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; sandbox`. Also `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Cross-Origin-Resource-Policy`, `Permissions-Policy` and `Cache-Control: no-store`. `X-Powered-By` is removed |
+| **HTTPS** | When a certificate bundle is present the API is served with `https.createServer`, otherwise it falls back to HTTP and says so. Login passwords and bearer tokens would otherwise cross the network in plain text |
+| **Safe errors** | One error handler returns messages from a fixed table. Nothing from the error object (message, stack, path, database text) reaches the response. The full error is logged server-side |
+| **Client storage** | The token is kept in `sessionStorage` and in memory only, never in a URL or a log |
 
-Passwords are hashed with **bcrypt** (`bcryptjs`, the pure-JavaScript build,
-chosen so the project installs without native build tools on any machine) at
-a work factor of 12; the config loader raises anything below 10 rather than
-trusting it. Hashing is used instead of encryption because it's one-way —
-there's no key that turns a hash back into the original password, so a
-stolen hash can be guessed against but never reversed. Plain-text passwords
-are never retained: the user model's `buildUser()` takes a `passwordHash`
-and has no parameter for a plain password at all, so storing one by accident
-would mean changing the model itself, not just a careless call site. The
-`toPublicUser()` serialiser works as an **allowlist** rather than a strip —
-it copies out the fields named as public instead of deleting the sensitive
-ones — so any field added to a user record later is private by default and
-has to be deliberately named before it shows up in a response. Even the
-password length ceiling (128 characters) is a security control rather than a
-formatting rule: hashing is deliberately slow, so an unbounded password
-would be a cheap way to burn the server's processor time.
+The security check script exercises these controls directly:
 
-### Token-Based Authentication (JWT)
+```powershell
+cd api
+npm run security:check
+```
 
-A JWT is issued on successful login via `jsonwebtoken`, signed with a secret
-read from `JWT_SECRET` and expiring after `JWT_EXPIRES_IN` (default `1h`).
-The payload is kept deliberately thin — `{ id, role }` — because a JWT
-payload is base64-encoded, not encrypted, so anyone holding the token can
-read it; no email or name goes anywhere near it. On every protected request,
-`requireAuth` pulls the bearer token from the `Authorization` header and
-verifies it against that same secret, and it's the verified `id` and `role`
-— not anything the caller typed — that the rest of the request trusts. If
-`JWT_SECRET` is left unset the API still boots: it generates a throwaway
-secret for that process only and logs a warning, which keeps a fresh clone
-runnable but means any token issued that way stops verifying the moment the
-process restarts — a deliberate nudge to go set a real one.
+## The React Client
 
-### Input Validation
+The client is a React application built with Vite, React Router and Tailwind CSS. It calls only relative `/api` paths. In development Vite proxies those to the API, so the browser never meets the self-signed certificate or a cross-origin request.
 
-Validation is **whitelist-based**: patterns describe what a value is allowed
-to contain rather than trying to list everything it isn't, so a character
-nobody thought to block is refused by default. Every pattern is anchored at
-both ends (`^...$`), because leaving it unanchored means it can match a
-fragment and let junk through wrapped around something that merely looks
-valid. Registration checks full name, email format and length, and password
-length and strength; login checks only that both fields are present. That
-gap is intentional — a format rule on login would answer a malformed email
-with `400` while every other failed login answers `401`, and that
-difference alone would tell an attacker which addresses are worth guessing
-at. So login is checked as loosely as correctness allows, while everything
-else gets rejected before it ever reaches business logic.
+| Page | Address | Who sees it |
+|---|---|---|
+| Register, Login | `/register`, `/login` | Everyone |
+| Browse gigs, gig detail and booking | `/gigs`, `/gigs/:id` | All signed-in roles; booking is for clients |
+| My gigs | `/my-gigs` | Freelancers |
+| My bookings | `/bookings` | Clients and freelancers |
+| Transactions | `/transactions` | Clients and freelancers |
+| Income summary | `/income` | Freelancers |
+| Admin | `/admin` | Admins |
 
-### HTTPS
-
-`server.js` looks for a PFX certificate bundle at the path configured by
-`SSL_PFX_PATH` (default `api/certs/localhost.pfx`). When it's there, the app
-is served with `https.createServer({ pfx, passphrase }, app)`; when it's
-not, the server falls back to plain HTTP and says so loudly
-(`no certificate found, starting over http instead of https`) rather than
-failing silently. Certificate and key material is excluded via `.gitignore`
-(`*.pem`, `*.key`, `*.crt`, `*.pfx`, `*.p12`), so a fresh clone never
-inherits someone else's private key — whoever runs it locally generates
-their own self-signed certificate and points `SSL_PFX_PATH` at it. HTTPS
-matters here specifically because both the login request (carrying a
-password) and every request after it (carrying a bearer token) would
-otherwise cross the network in plain text, readable or replayable by anyone
-sitting on the same path.
-
-### Error Handling
-
-A single error-handling middleware, mounted last in `app.js`, catches every
-thrown error and rejected promise from anywhere in the request — including
-a body that failed to parse before any route even ran. It has one contract:
-**nothing derived from the error object reaches the response.** The message
-sent back is chosen from a fixed table keyed by `error.type`
-(`entity.parse.failed`, `entity.too.large`, and a generic fallback) — never
-`error.message`, never `error.stack`, never a path leaked by the parser. The
-full error is still logged server-side with `console.error`, so nothing is
-lost for debugging. This exists because, before the handler was written, a
-malformed JSON body used to return a raw stack trace containing the
-project's absolute file path — exactly the kind of internal detail the POE
-brief requires the API to never expose.
+- **Role-aware navigation and route guards** show each role only its own pages. These are for usability only: the API is the real enforcement and refuses the rest even if an address is typed in.
+- **Client-side validation** uses the same limits as the API, so most mistakes are caught before a request is sent.
+- **Errors are handled gracefully.** An expired session, a 403 and a 404 are shown as fixed plain sentences. Validation, duplicate-email and rate-limit messages come from the API, which writes them for users. The client never renders a raw error object, a stack trace or an unexpected server message.
 
 ## Getting Started
 
-**Prerequisites:** Node.js ≥ 18.
+**Prerequisites:** Node.js (the API needs 18 or newer; the frontend test dependencies warn on anything older than 22.22 or 24.15) and MongoDB, either a local installation running as a service or an Atlas cluster with your IP address allowed.
 
-```bash
+### 1. The API
+
+```powershell
 cd api
 npm install
-cp .env.example .env      # then fill in JWT_SECRET
-npm run dev                # nodemon, or npm start for a plain run
+copy .env.example .env
 ```
 
-The API boots without a configured secret or certificate — it generates a
-throwaway JWT secret and falls back to HTTP, both loudly logged — so a fresh
-clone is runnable immediately. For a proper local run:
+Open `.env` and set:
 
-1. Generate a signing secret:
-   `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-   and set it as `JWT_SECRET` in `.env`.
-2. Generate a local self-signed certificate and bundle it as a `.pfx`, then
-   set `SSL_PFX_PATH` (and `SSL_PFX_PASSWORD` if the bundle is password
-   protected) in `.env`. From inside `api/`:
-
-   ```bash
-   mkdir -p certs
-   openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 \
-     -keyout certs/localhost-key.pem -out certs/localhost-cert.pem -subj "/CN=localhost"
-   openssl pkcs12 -export -out certs/localhost.pfx \
-     -inkey certs/localhost-key.pem -in certs/localhost-cert.pem -passout pass:
-   ```
-
-   On Windows, if `openssl` isn't recognised in PowerShell, use Git Bash, or
-   call Git's bundled copy directly
-   (`"C:\Program Files\Git\usr\bin\openssl.exe"`).
-3. `npm run dev` and confirm the console reports
-   `hustlehub+ api listening at https://localhost:5000`.
+- `JWT_SECRET`: generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. If it is left blank the API still starts with a throwaway secret, but every token stops working when it restarts.
+- `MONGO_URI`: `mongodb://127.0.0.1:27017/hustlehub` for a local instance, or your Atlas connection string.
 
 | Variable | Purpose | Default |
 |---|---|---|
 | `NODE_ENV` | `development` or `production` | `development` |
 | `PORT` | Port the API listens on | `5000` |
-| `JWT_SECRET` | Token signing secret | generated per-process if unset |
+| `JWT_SECRET` | Token signing secret | generated per process if unset |
 | `JWT_EXPIRES_IN` | Token lifetime | `1h` |
 | `BCRYPT_ROUNDS` | bcrypt work factor | `12` (raised to 10 minimum) |
-| `SSL_PFX_PATH` | Path to the local certificate bundle | `api/certs/localhost.pfx` |
-| `SSL_PFX_PASSWORD` | Passphrase for the bundle | (blank) |
+| `MONGO_URI` | MongoDB connection string | local instance in development; required elsewhere |
+| `TRUST_PROXY` | Trust forwarded addresses, only behind a real reverse proxy | `false` |
+| `SSL_PFX_PATH` | Certificate bundle | `api/certs/localhost.pfx` |
+| `SSL_PFX_PASSWORD` | Bundle passphrase | blank |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FULL_NAME` | Used only by `npm run seed:admin` | none |
+| `RATE_LIMIT_*_MAX`, `RATE_LIMIT_*_WINDOW_MS` | Override any rate limit (see `.env.example`) | see Security Measures |
+
+### 2. HTTPS certificate
+
+The client's development proxy talks to `https://localhost:5000`, so run the API over HTTPS. From inside `api/`, in PowerShell:
+
+```powershell
+mkdir certs
+& "C:\Program Files\Git\usr\bin\openssl.exe" req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout certs/localhost-key.pem -out certs/localhost-cert.pem -subj "/CN=localhost"
+& "C:\Program Files\Git\usr\bin\openssl.exe" pkcs12 -export -out certs/localhost.pfx -inkey certs/localhost-key.pem -in certs/localhost-cert.pem -passout pass:
+```
+
+Certificate and key files are excluded by `.gitignore`, so a clone never inherits someone else's private key. On macOS or Linux use `openssl` directly.
+
+### 3. Create accounts and start
+
+```powershell
+$env:ADMIN_EMAIL = "admin@hustlehub.test"
+$env:ADMIN_PASSWORD = "<choose a password>"
+$env:ADMIN_FULL_NAME = "Admin"
+npm run seed:admin      # the only way an admin account can exist
+npm run seed:demo       # optional: two freelancers, one client and six gigs
+npm start               # or npm run dev for nodemon
+```
+
+`npm run seed:demo` creates `demo.freelancer1@hustlehub.test`, `demo.freelancer2@hustlehub.test` and `demo.client@hustlehub.test`, all with the password `Password123`, for local development and the demonstration only. It refuses to run in production.
+
+Confirm the console reports `hustlehub+ api listening at https://localhost:5000`.
+
+### 4. The client
+
+In a second terminal:
+
+```powershell
+cd client
+npm install
+npm run dev
+```
+
+Open the address Vite prints (normally `http://localhost:5173`). Other client scripts are `npm run build`, `npm run lint` and `npm test`.
 
 ## API Endpoints
 
-Verified by running the API locally against every scenario listed below.
+All addresses start with `/api`. Every route needs a bearer token except the three marked public. Responses use the envelope shown earlier.
 
-| Method | Endpoint | Purpose | Authentication | Expected Response |
+| Method | Endpoint | Who may call it | Ownership | Purpose |
 |---|---|---|---|---|
-| GET | `/api/health` | Liveness probe | None | `200` — status, uptime, timestamp |
-| POST | `/api/auth/register` | Create an account | None | `201` + safe user · `400` validation/invalid role · `409` duplicate email |
-| POST | `/api/auth/login` | Authenticate and issue a JWT | None (rate-limited) | `200` + safe user + token · `400` missing fields · `401` invalid credentials · `429` too many attempts |
-| GET | `/api/auth/profile` | Return the account behind the token | Bearer JWT | `200` + safe user · `401` missing/invalid/expired token · `404` account no longer exists |
-| GET | `/api/auth/admin` | Demonstrates a role-restricted route | Bearer JWT + `admin` role | `200` · `401` no/invalid token · `403` wrong role |
+| GET | `/health` | Public | | Liveness probe |
+| POST | `/auth/register` | Public (rate limited) | | Create a client or freelancer account |
+| POST | `/auth/login` | Public (rate limited) | | Log in and receive a JWT |
+| GET | `/auth/profile` | Any signed-in user | Self | The account behind the token |
+| GET | `/auth/admin` | Admin | | Demonstration of an admin-only route |
+| GET | `/gigs` | Any signed-in user | | Browse active gigs: `page`, `limit`, `category`, `q`, `minPrice`, `maxPrice` |
+| GET | `/gigs/mine` | Freelancer | Own gigs | The freelancer's own gigs |
+| GET | `/gigs/:id` | Any signed-in user | | Gig detail |
+| POST | `/gigs` | Freelancer | Owner from token | Create a gig |
+| PUT, PATCH | `/gigs/:id` | Freelancer | Owner only | Update a gig |
+| DELETE | `/gigs/:id` | Freelancer, admin | Owner, or admin | Deactivate a gig |
+| POST | `/bookings` | Client (rate limited) | | Book a gig; creates a booking and a transaction |
+| GET | `/bookings/mine` | Client, freelancer | Own bookings | Bookings made, or bookings on the freelancer's gigs |
+| GET | `/bookings/:id` | Client, freelancer | Participant only | Booking detail |
+| GET | `/transactions/mine` | Client, freelancer | Participant only | The user's own transactions |
+| GET | `/transactions` | Admin | | All transactions, paged |
+| GET | `/income/me` | Freelancer | Self | Total, count, and breakdown by gig and by month |
+| GET | `/admin/users` | Admin | | All users, without password hashes, paged |
+
+Typical failures: 400 validation or malformed id, 401 missing or invalid token, 403 wrong role, 404 not found or not yours, 409 duplicate email, 429 rate limit.
 
 ## Testing
 
-The API is tested with a Postman collection that exercises all five
-endpoints above, alongside the invalid-input cases the brief calls out
-specifically: duplicate email, wrong password, missing fields, and malformed
-JSON.
+There are three layers.
 
-- **Collection:** [`docs/postman/HustleHub.postman_collection.json`](docs/postman/HustleHub.postman_collection.json)
-- **Running it:** import the file into Postman, then turn off "SSL
-  certificate verification" under Settings → General — the API is served
-  over a self-signed local certificate, which Postman won't trust by
-  default. Run the Register success request first, then Login success,
-  before touching Profile or Admin; the collection captures a test email and
-  a bearer token automatically through request scripts, so nothing needs to
-  be copied by hand.
-- **What's covered:**
-  - **Health** — liveness check
-  - **Register** — success, duplicate email (`409`), missing fields (`400`),
-    invalid email format (`400`), weak password (`400`), disallowed role
-    (`400`), malformed JSON body (`400`, safe error message only)
-  - **Login** — success with token, wrong password (`401`), unknown email
-    (`401`, identical message to wrong password), missing fields (`400`),
-    malformed JSON (`400`), rate limiting (`429` after repeated failures)
-  - **Profile** — valid token (`200`), missing token (`401`), malformed
-    token (`401`)
-  - **Admin** — non-admin token (`403`), missing token (`401`)
-- **Known gap:** the `/api/auth/admin` success path (a genuinely valid admin
-  token) can't be demonstrated, because registration only allows
-  self-assigning `client` or `freelancer`
-  (`api/models/userModel.js`, `SELF_ASSIGNABLE_ROLES`) and nothing in this
-  API creates an admin account. Only the `401` and `403` cases are covered.
-- **Screenshots:** a response capture for every scenario listed above,
-  organised by endpoint, showing status code and JSON body: (Click on the endpoint category to reveal the screenshot)
+| Layer | Covers | How to run |
+|---|---|---|
+| Security check | 68 checks on validation, sanitisation, JWT, RBAC, rate limits and headers | `cd api` then `npm run security:check` |
+| API tests (Postman and Newman) | 108 requests in 8 folders: accounts, JWT, RBAC denials, validation and injection, gigs, bookings and transactions, income, rate limiting | `powershell -ExecutionPolicy Bypass -File .\docs\newman\full-evidence-run.ps1` |
+| Frontend tests (Vitest and React Testing Library) | 20 tests: rendering, interaction, route guards, form rules | `cd client` then `npm test` |
 
-  <details>
-  <summary>Health</summary>
+### What the API tests prove
 
-  ![GET /api/health](docs/screenshots/Health/GEThealthPM.png)
-  </details>
+- Registration and login work for each role; duplicates, bad input and an attempted admin registration are refused; an unknown email and a wrong password give the same reply.
+- Missing, malformed, unsigned and wrongly signed tokens are all rejected.
+- Each role can do only its own actions, and users cannot reach other users' gigs, bookings or transactions.
+- Operator payloads such as `{"$gt": ""}` and script tags are refused or neutralised, and malformed ids return 400.
+- A booking creates a transaction naming both users, the price comes from the stored gig, and the freelancer's income follows the transactions.
+- Repeated failed logins and a booking flood end in 429 with a `Retry-After` header, and another user is not blocked.
 
-  <details>
-  <summary>Register</summary>
+### Results
 
-  ![Register success - 201](docs/screenshots/Register/POSTautreghsuccess.png)
-  ![Register duplicate email - 409](docs/screenshots/Register/POSTauthregfailduplicate.png)
-  ![Register missing fields - 400](docs/screenshots/Register/POSTauthregfailrmissingfields.png)
-  ![Register invalid email - 400](docs/screenshots/Register/POSTauthregfailinvalidemail.png)
-  ![Register weak password - 400](docs/screenshots/Register/POSTauthregfailweakpass.png)
-  ![Register disallowed role - 400](docs/screenshots/Register/POSTauthregfaildisallowedrole.png)
-  ![Register malformed JSON - 400](docs/screenshots/Register/POSTauthregfailedmalformedjson.png)
-  </details>
+- **Newman:** two runs from fresh databases on MongoDB, each with 126 requests and 335 assertions and 0 failed. The collection holds 108 requests; Newman counts more because two rate-limit loops send repeats. Evidence: [CLI output](docs/newman/newman-cli-final.txt) and [HTML report](docs/newman/newman-report-final.html).
+- **Vitest:** 3 files, 20 tests passed. Evidence: [output](docs/frontend-tests/vitest-output.txt).
 
-  <details>
-  <summary>Login</summary>
+The collection is in [docs/postman](docs/postman). The full procedure, including how to run it in the Postman app and what to do when a run fails, is in [docs/testing.md](docs/testing.md) and [docs/postman-guide.md](docs/postman-guide.md). Failed logins lock an address for the rest of the minute, so restart the API and use a fresh database between Newman runs.
 
-  ![Login success - 200 with token](docs/screenshots/Login/POSTauthloginsuccess.png)
-  ![Login wrong password - 401](docs/screenshots/Login/POSTauthloginfailedwrongpass.png)
-  ![Login unknown email - 401](docs/screenshots/Login/POSTauthloginfailunkownemail.png)
-  ![Login missing fields - 400](docs/screenshots/Login/POSTauthloginfailmissingfields.png)
-  ![Login malformed JSON - 400](docs/screenshots/Login/POSTauthloginfailedmalformedjson.png)
-  ![Login rate limited - 429](docs/screenshots/Login/POSTauthloginfailratelimit.png)
-  </details>
+## Screenshots
 
-  <details>
-  <summary>Profile</summary>
+Part 1 response captures are in `docs/screenshots/`. Part 2 screenshots are in `docs/screenshots/part2/`.
 
-  ![Profile valid token - 200](docs/screenshots/Profile/GETauthprofilevalid.png)
-  ![Profile missing token - 401](docs/screenshots/Profile/GETauthprofilemissing.png)
-  ![Profile malformed token - 401](docs/screenshots/Profile/GETauthprofilemalformed.png)
-  </details>
+<!-- PART 2 SCREENSHOTS: remove this comment line and the closing marker line below once the images are committed in docs/screenshots/part2/
 
-  <details>
-  <summary>Admin</summary>
+<details>
+<summary>API tests (Postman, Newman, Vitest)</summary>
 
-  ![Admin non-admin token - 403](docs/screenshots/Admin/GETauthadminnon-admin.png)
-  ![Admin missing token - 401](docs/screenshots/Admin/GETauthadminmissing.png)
-  </details>
+![API running over HTTPS](docs/screenshots/part2/01-api-running.png)
+![Security check, 68 passed](docs/screenshots/part2/02-security-check.png)
+![Postman collection folders](docs/screenshots/part2/03-postman-collection.png)
+![Collection Runner summary](docs/screenshots/part2/04-runner-summary.png)
+![Login returns a token](docs/screenshots/part2/05-login-token.png)
+![Freelancer creates a gig](docs/screenshots/part2/06-gig-created.png)
+![Booking creates a transaction](docs/screenshots/part2/07-booking-transaction.png)
+![Transaction linked to client and freelancer](docs/screenshots/part2/08-transaction-linked.png)
+![Freelancer income](docs/screenshots/part2/09-income.png)
+![Client creating a gig is refused, 403](docs/screenshots/part2/10-rbac-403.png)
+![Another freelancer's gig answers 404](docs/screenshots/part2/11-ownership-404.png)
+![NoSQL operator payload refused, 400](docs/screenshots/part2/12-nosql-400.png)
+![Rate limit, 429 with Retry-After](docs/screenshots/part2/13-rate-limit-429.png)
+![Newman CLI summary](docs/screenshots/part2/14-newman-cli.png)
+![Newman HTML report](docs/screenshots/part2/15-newman-html.png)
+![Vitest output](docs/screenshots/part2/16-vitest.png)
+</details>
+
+<details>
+<summary>The application</summary>
+
+![Register with a validation error](docs/screenshots/part2/17-register-validation.png)
+![Login](docs/screenshots/part2/18-login.png)
+![Browse gigs](docs/screenshots/part2/19-browse-gigs.png)
+![Booking a gig](docs/screenshots/part2/20-book-gig.png)
+![A freelancer's gigs](docs/screenshots/part2/21-my-gigs.png)
+![Client bookings](docs/screenshots/part2/22-bookings-client.png)
+![Freelancer bookings](docs/screenshots/part2/23-bookings-freelancer.png)
+![Transactions](docs/screenshots/part2/24-transactions.png)
+![Income summary](docs/screenshots/part2/25-income.png)
+![Admin](docs/screenshots/part2/26-admin.png)
+</details>
+
+END OF PART 2 SCREENSHOTS -->
 
 ## Demonstration
 
-A recorded walkthrough shows the API starting over HTTPS, a registration, a
-login that returns a token, and an authenticated profile call using that
-token.
+- **Part 1 video:** https://youtu.be/t7T_t2zLuTA (API over HTTPS, registration, login with a token, and an authenticated profile call)
+- **Part 2 video:** 
 
-- **Video:** https://youtu.be/t7T_t2zLuTA
+## Known Limitations
+
+- **Rate limits live in memory** and are counted per process, so they reset when the API restarts and would need a shared store if the API ran on several servers.
+- **Non-owned resources answer 404, not 403**, so a caller cannot tell a gig or booking they do not own from one that does not exist.
+- **Payment is simulated.** A booking returns a payment reference and always completes.
+- **Standalone MongoDB** cannot run multi-document transactions, so a compensating delete is used for a booking and its transaction. A replica set or Atlas uses a real transaction.
+- **The client is served by the Vite dev server.** Serving a built client from the API, containers and CI/CD belong to Part 3, as do tax estimation, the full income dashboard and logging.
 
 ## Team
 
 | Role | Responsibility | Member |
 |---|---|---|
-| Role 1 | Backend / API Lead | Christiaan - ST10434131 |
-| Role 2 | Security Specialist | Morgan - ST10257779 | 
-| Role 3 | Architecture & Docs | Neville - ST10404539 |
-| Role 4 | Testing & Submission | Ethan - ST10444972 |
+| Role 1 | Backend and API: models, gigs, bookings, transactions, income | Ethan - ST10444972) |
+| Role 2 | Security: RBAC, validation, sanitisation, rate limiting, Helmet and CSP | (add member) |
+| Role 3 | Frontend and documentation: React client, architecture diagram, README | (add member) |
+| Role 4 | Testing and submission: Postman and Newman, frontend tests, evidence, video | Neville-ST10404539 |
