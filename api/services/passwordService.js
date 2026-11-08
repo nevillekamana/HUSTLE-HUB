@@ -8,6 +8,9 @@
 //-----------------------------------------------------\\
 
 const bcrypt = require('bcryptjs');
+const { randomBytes } = require('crypto');
+
+let dummyHashPromise;
 const env = require('../config/env');
 
 //-----------------------------------------------------\\
@@ -41,5 +44,9 @@ const verifyPassword = async (plainPassword, hash) => {
 
 module.exports = {
   hashPassword,
-  verifyPassword
+  verifyPassword,
+  burnPasswordCheck: async (plainPassword) => {
+    dummyHashPromise ||= bcrypt.hash(randomBytes(16).toString('hex'), env.bcryptRounds);
+    return bcrypt.compare(String(plainPassword || ''), await dummyHashPromise);
+  }
 };
