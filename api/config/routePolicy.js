@@ -20,6 +20,7 @@ const {
   validateGigQuery,
   validatePaging
 } = require('../middleware/resourceValidation');
+const { validateTaxQuery, validateAuditQuery } = require('../middleware/auditValidation');
 
 //the roles behind one or more permissions from config/accessPolicy.js
 const allow = (...permissions) => {
@@ -53,10 +54,12 @@ const ROUTE_POLICY = Object.freeze([
   //and the full transaction list belongs to admins
   { method: 'GET', path: '/transactions/mine', roles: allow('transactions:view-own') },
   { method: 'GET', path: '/income/me', roles: allow('income:view-own') },
+  { method: 'GET', path: '/income/tax', roles: allow('income:view-own'), checks: [validateTaxQuery] },
   { method: 'GET', path: '/transactions', roles: allow('admin:access'), checks: [validatePaging] },
 
   //administration: everything under /admin, whatever the method
   { method: 'GET', path: '/admin/users', roles: allow('admin:access'), checks: [validatePaging] },
+  { method: 'GET', path: '/admin/audit-logs', roles: allow('admin:access'), checks: [validateAuditQuery] },
   { method: '*', path: '/admin/*', roles: allow('admin:access') }
 ]);
 

@@ -4,6 +4,7 @@
 
 const mongoose = require('mongoose');
 const { Transaction } = require('../models/transactionModel');
+const { defaultTaxYear, taxYearOf, taxYearBounds, estimateTax, SUPPORTED_TAX_YEARS, ASSUMPTIONS, DISCLAIMER } = require('./taxService');
 
 //-----------------------------------------------------\\
 //                  INCOME AGGREGATION
@@ -66,4 +67,25 @@ const getIncome = async (freelancerId) => {
 //                        EXPORTS
 //-----------------------------------------------------\\
 
-module.exports = { getIncome };
+const getTaxEstimate = async (freelancerId, requestedTaxYear) => {
+  const today = new Date();
+  const taxYear = requestedTaxYear || defaultTaxYear(today);
+  const { start: yearStart, end: yearEnd } = taxYearBounds(taxYear);
+  const [income] = await Transaction.aggregate([
+    { $match: { freelancer: new mongoose.Types.ObjectId(freelancerId), status: 'completed', createdAt: { $gte: yearStart, $lt: yearEnd } } },
+    { $group: { _id: null, totalCents: { $sum: '$amountCents' }, count: { $sum: 1 } } }
+  ]);
+  return {
+    currency: 'ZAR',
+    ...estimateTax(income?.totalCents || 0, taxYear),
+    transactionCount: income?.count || 0,
+    periodStart: yearStart.toISOString(),
+    periodEnd: yearEnd.toISOString(),
+    availableTaxYears: SUPPORTED_TAX_YEARS,
+    isCurrentTaxYear: taxYear === taxYearOf(today),
+    assumptions: ASSUMPTIONS,
+    disclaimer: DISCLAIMER
+  };
+};
+
+module.exports = { getIncome, getTaxEstimate };

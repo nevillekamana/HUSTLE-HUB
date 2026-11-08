@@ -3,7 +3,7 @@
 //-----------------------------------------------------\\
 
 const express = require('express');
-const { myIncome } = require('../controllers/incomeController');
+const { myIncome, myTax } = require('../controllers/incomeController');
 
 //-----------------------------------------------------\\
 //                      INCOME ROUTER
@@ -12,6 +12,7 @@ const { myIncome } = require('../controllers/incomeController');
 const router = express.Router();
 
 router.get('/me', myIncome);
+router.get('/tax', myTax);
 
 //-----------------------------------------------------\\
 //                        EXPORTS
