@@ -7,6 +7,7 @@ const { sendSuccess, sendFailure } = require('../utils/apiResponse');
 const { escapeRegex } = require('../middleware/resourceValidation');
 const { Gig, toPublicGig } = require('../models/gigModel');
 const { ROLES } = require('../models/userModel');
+const audit = require('../services/auditService');
 
 //-----------------------------------------------------\\
 //                        HELPERS
@@ -101,6 +102,7 @@ const createGig = async (req, res) => {
     })
   );
 
+  await audit.record({ req, action: 'gig.create', targetType: 'gig', targetId: gig.id, details: { category: gig.category, priceCents: gig.priceCents } });
   return sendSuccess(res, httpStatus.CREATED, 'gig created', { gig: toPublicGig(gig) });
 };
 
@@ -121,6 +123,7 @@ const updateGig = async (req, res) => {
     return sendFailure(res, httpStatus.NOT_FOUND, 'gig not found');
   }
 
+  await audit.record({ req, action: 'gig.update', targetType: 'gig', targetId: gig.id, details: { fields: Object.keys(req.body).join(',') } });
   return sendSuccess(res, httpStatus.OK, 'gig updated', { gig: toPublicGig(gig) });
 };
 
@@ -141,6 +144,7 @@ const softDeleteGig = async (req, res) => {
     return sendFailure(res, httpStatus.NOT_FOUND, 'gig not found');
   }
 
+  await audit.record({ req, action: 'gig.delete', targetType: 'gig', targetId: gig.id });
   return sendSuccess(res, httpStatus.OK, 'gig deleted', { gig: toPublicGig(gig) });
 };
 

@@ -7,6 +7,7 @@ const { sendSuccess, sendFailure } = require('../utils/apiResponse');
 const { Booking, toPublicBooking } = require('../models/bookingModel');
 const { toPublicTransaction } = require('../models/transactionModel');
 const bookingService = require('../services/bookingService');
+const audit = require('../services/auditService');
 
 //-----------------------------------------------------\\
 //                        HELPERS
@@ -34,16 +35,20 @@ const create = async (req, res) => {
       clientId: req.auth.id
     });
 
+    await audit.record({ req, action: 'booking.create', targetType: 'booking', targetId: booking.id, details: { amountCents: booking.priceCents } });
+    await audit.record({ req, action: 'transaction.create', targetType: 'transaction', targetId: transaction.id, details: { amountCents: transaction.amountCents, currency: transaction.currency } });
     return sendSuccess(res, httpStatus.CREATED, 'booking confirmed', {
       booking: toPublicBooking(booking, false),
       transaction: toPublicTransaction(transaction, false)
     });
   } catch (error) {
     if (error.code === bookingService.GIG_NOT_FOUND) {
+      await audit.record({ req, action: 'booking.create', outcome: 'failure', details: { reason: 'gig_not_found' } });
       return sendFailure(res, httpStatus.NOT_FOUND, error.message);
     }
 
     if (error.code === bookingService.OWN_GIG) {
+      await audit.record({ req, action: 'booking.create', outcome: 'failure', details: { reason: 'own_gig' } });
       return sendFailure(res, httpStatus.CONFLICT, error.message);
     }
 

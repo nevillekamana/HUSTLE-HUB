@@ -4,6 +4,7 @@
 
 const express = require('express');
 const { listUsers } = require('../controllers/adminController');
+const { listAuditLogs } = require('../controllers/auditController');
 
 //-----------------------------------------------------\\
 //                      ADMIN ROUTER
@@ -14,6 +15,7 @@ const { listUsers } = require('../controllers/adminController');
 const router = express.Router();
 
 router.get('/users', listUsers);
+router.get('/audit-logs', listAuditLogs);
 
 //-----------------------------------------------------\\
 //                        EXPORTS

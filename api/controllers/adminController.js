@@ -5,6 +5,7 @@
 const httpStatus = require('../utils/httpStatus');
 const { sendSuccess } = require('../utils/apiResponse');
 const { User, toPublicUser } = require('../models/userModel');
+const audit = require('../services/auditService');
 
 //-----------------------------------------------------\\
 //                      USER LISTING
@@ -19,6 +20,8 @@ const listUsers = async (req, res) => {
     User.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
     User.countDocuments()
   ]);
+
+  await audit.record({ req, action: 'admin.users.list', details: { page, limit } });
 
   return sendSuccess(res, httpStatus.OK, 'users retrieved', {
     users: users.map(toPublicUser),
