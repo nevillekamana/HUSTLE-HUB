@@ -95,6 +95,9 @@ const env = {
   jwtSecret: readSecret(process.env.JWT_SECRET, nodeEnv),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
   bcryptRounds: readRounds(process.env.BCRYPT_ROUNDS, 12),
+  lockoutMaxFailures: readNumber(process.env.LOCKOUT_MAX_FAILURES, 3),
+  lockoutDurationMs: readNumber(process.env.LOCKOUT_DURATION_MS, 900000),
+  logLevel: process.env.LOG_LEVEL || 'info',
 
   //the certificate is never committed, an absent one is not an error, the
   //server falls back to http and says so rather than refusing to start

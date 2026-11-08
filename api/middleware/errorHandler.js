@@ -9,6 +9,7 @@
 
 const httpStatus = require('../utils/httpStatus');
 const { sendFailure } = require('../utils/apiResponse');
+const logger = require('../utils/logger');
 
 //-----------------------------------------------------\\
 //                     ERROR HANDLER
@@ -46,7 +47,7 @@ const errorHandler = (error, req, res, next) => {
 
   //the whole error goes to the server log where it can be read during marking,
   //the caller receives only the fixed message chosen below
-  console.error('[error] ' + req.method + ' ' + req.originalUrl + ' -> ' + status, error);
+  logger[status >= 500 ? 'error' : 'warn']('error.handled', { requestId: req.id, method: req.method, path: req.originalUrl, status, error });
 
   return sendFailure(res, status, SAFE_MESSAGES[error.type] || SAFE_MESSAGES.fallback);
 };

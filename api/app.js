@@ -12,6 +12,7 @@ const { sanitizeRequest } = require('./middleware/sanitizeMiddleware');
 const requireAuthByDefault = require('./middleware/apiGuard');
 const enforceRoutePolicy = require('./middleware/routeGuard');
 const { apiRateLimiter } = require('./middleware/rateLimitMiddleware');
+const requestLogger = require('./middleware/requestLogger');
 
 //-----------------------------------------------------\\
 //                   APPLICATION SETUP
@@ -29,6 +30,8 @@ app.set('trust proxy', env.trustProxy ? 1 : false);
 //express advertises itself in a response header by default, which tells an
 //attacker exactly what stack to target
 app.disable('x-powered-by');
+
+app.use(requestLogger);
 
 //security headers go on every response, including errors and 404s
 app.use(securityHeaders);
