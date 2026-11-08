@@ -27,6 +27,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "security:check": "node scripts/securityCheck.js",
+    "test": "node --test",
     "seed:admin": "node scripts/seedAdmin.js",
     "seed:demo": "node scripts/seedDemo.js"
   }
